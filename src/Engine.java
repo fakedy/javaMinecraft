@@ -1,3 +1,6 @@
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 
 public class Engine {
@@ -9,17 +12,21 @@ public class Engine {
 
     }
 
+    double MS_PER_UPDATE = 1000.0 / 60.0;
+    double previous = System.currentTimeMillis();
+    double lag = 0.0;
+
     private void start() {
 
-        double MS_PER_UPDATE = 1000.0 / 60.0;
-        double previous = System.currentTimeMillis();
-        double lag = 0.0;
 
         Window window = new Window(1920,1080, "javaMinecraft");
-        Renderer renderer = new Renderer(window);
+        Camera camera = new Camera();
+        Renderer renderer = new Renderer(window, camera);
         renderer.setupRender();
-        Game game = new Game();
-        ShaderCompiler shaderCompiler = new ShaderCompiler("src/resources/shaders/default_vertex.glsl", "src/resources/shaders/default_vertex.glsl");
+        ShaderCompiler shaderCompiler = new ShaderCompiler("src/resources/shaders/default_vertex.glsl", "src/resources/shaders/default_fragment.glsl");
+        renderer.shader = shaderCompiler;
+        Game game = new Game(camera);
+        game.start();
 
         while ( !glfwWindowShouldClose(window.getWindowHandle()) ) {
 
