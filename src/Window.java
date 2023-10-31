@@ -1,5 +1,6 @@
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
+import org.lwjgl.opengl.GL33;
 import org.lwjgl.system.*;
 
 import java.nio.*;
@@ -49,11 +50,10 @@ public class Window {
             throw new RuntimeException("Failed to create the GLFW window");
         }
 
-        // Key callback
-        glfwSetKeyCallback(windowHandle, (window, key, scancode, action, mods) -> {
-            if ( key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE )
-                glfwSetWindowShouldClose(window, true);
-        });
+
+            glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+
 
         // Get the thread stack and push a new frame
         try (MemoryStack stack = stackPush() ) {
@@ -73,6 +73,21 @@ public class Window {
                     (vidmode.height() - pHeight.get(0)) / 2
             );
         }
+
+        glfwSetFramebufferSizeCallback(windowHandle, (window, Width, Height) -> {
+
+            GL33.glViewport(0,0, Width, Height);
+
+
+
+
+        });
+
+
+
+
+
+
 
         glfwMakeContextCurrent(windowHandle);
 

@@ -91,20 +91,19 @@ public class Renderer {
         GL33.glVertexAttribPointer(1, 2, GL33.GL_FLOAT, false, 5 * Float.BYTES, 3 * Float.BYTES);
         glEnableVertexAttribArray(1);
 
+        glEnable(GL_DEPTH_TEST);
+
         }
 
 
         public void render(){
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
-            Matrix4f projectionMatrix = new Matrix4f().perspective((float) Math.toRadians(camera.fieldOfView), 1.0f, 0.01f, 100.0f).lookAt(
-                    0.0f, 0.0f, 10.0f,
-                    0.0f, 0.0f, 0.0f,
-                    0.0f, 1.0f, 0.0f);
+            Matrix4f projectionMatrix = new Matrix4f().perspective((float) Math.toRadians(camera.fieldOfView), 1920/1080, 0.01f, 1000.0f);
 
             Matrix4f modelMatrix = new Matrix4f().identity();
-            Matrix4f viewMatrix = new Matrix4f().identity();
-            viewMatrix = viewMatrix.translate(new Vector3f(0.0f,0.0f,-2.0f));
+            Matrix4f viewMatrix;
+            viewMatrix = camera.view;
 
             shader.setMat4("projection", projectionMatrix);
             shader.setMat4("view", viewMatrix);

@@ -18,8 +18,9 @@ public class Game {
 
     public void update(){
 
-        camera.Follow(player);
         player.update();
+        camera.Follow(player);
+        camera.update();
 
 
     }

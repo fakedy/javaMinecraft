@@ -1,5 +1,3 @@
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
 
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 
@@ -12,7 +10,7 @@ public class Engine {
 
     }
 
-    double MS_PER_UPDATE = 1000.0 / 60.0;
+    double MS_PER_UPDATE = 1000.0 / 165.0;
     double previous = System.currentTimeMillis();
     double lag = 0.0;
 
@@ -25,10 +23,16 @@ public class Engine {
         renderer.setupRender();
         ShaderCompiler shaderCompiler = new ShaderCompiler("src/resources/shaders/default_vertex.glsl", "src/resources/shaders/default_fragment.glsl");
         renderer.shader = shaderCompiler;
+        InputManager inputManager = new InputManager(window.getWindowHandle());
         Game game = new Game(camera);
         game.start();
 
         while ( !glfwWindowShouldClose(window.getWindowHandle()) ) {
+            double current = System.currentTimeMillis();
+            double elapsed = current - previous;
+            previous = current;
+            lag += elapsed;
+            Time.setDeltaTime(elapsed / 1000.0);
 
             while(lag >= MS_PER_UPDATE){
 
