@@ -1,9 +1,11 @@
-
+import org.joml.Vector3f;
 
 public class Game {
 
     private Camera camera;
     private Player player;
+
+    private World world;
 
     public Game(Camera camera){
         this.camera = camera;
@@ -13,6 +15,8 @@ public class Game {
     public void start(){
 
     player = new Player();
+    world = new World();
+
 
     }
 
@@ -21,6 +25,8 @@ public class Game {
         player.update();
         camera.Follow(player);
         camera.update();
+        world.updateWorld();
+
 
 
     }

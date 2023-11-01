@@ -51,8 +51,6 @@ public class Window {
         }
 
 
-            glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
 
 
         // Get the thread stack and push a new frame

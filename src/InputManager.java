@@ -12,12 +12,13 @@ public class InputManager {
     static float xoffset = 0.0f;
     static float yoffset = 0.0f;
 
+    private boolean menu = false;
+
 
     public InputManager(long windowHandle){
 
         glfwSetKeyCallback(windowHandle, (window, key, scancode, action, mods) -> {
-            if ( key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE )
-                glfwSetWindowShouldClose(window, true);
+
 
             if (key >= 0 && key < GLFW.GLFW_KEY_LAST) {
                 if (action == GLFW_PRESS) {
@@ -27,26 +28,42 @@ public class InputManager {
                 }
             }
 
+            // will be moved and fixed later
+            if ( key == GLFW_KEY_ESCAPE && action == GLFW_PRESS ){
+
+                menu = !menu;
+
+                if (menu == true){
+                    glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                } else {
+                    glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                }
+
+            }
+
         });
 
         glfwSetCursorPosCallback(windowHandle, (window, xposIn, yposIn) -> {
 
-            float xpos = (float)xposIn;
-            float ypos = (float)yposIn;
+            if (menu != true) {
 
-            if (firstMouse)
-            {
+                float xpos = (float) xposIn;
+                float ypos = (float) yposIn;
+
+                if (firstMouse) {
+                    lastX = xpos;
+                    lastY = ypos;
+                    firstMouse = false;
+                }
+
+                xoffset = xpos - 0;
+                yoffset = 0 - ypos; // reversed since y-coordinates go from bottom to top
+
                 lastX = xpos;
                 lastY = ypos;
-                firstMouse = false;
             }
-
-            xoffset = xpos - 0;
-            yoffset = 0 - ypos; // reversed since y-coordinates go from bottom to top
-
-            lastX = xpos;
-            lastY = ypos;
         });
+
 
 
 
