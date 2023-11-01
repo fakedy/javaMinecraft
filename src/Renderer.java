@@ -54,7 +54,7 @@ public class Renderer {
             for (int i = 0; i < renderObjects.size(); i++){
 
                 glBindVertexArray(renderObjects.get(i).VAO);
-                glDrawArrays(GL_TRIANGLES, 0, 36);
+                glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).verts.length);
             }
             glfwSwapBuffers(window); // swap the color buffers
 
