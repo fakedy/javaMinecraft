@@ -1,3 +1,6 @@
+import java.util.HashMap;
+import java.util.Map;
+
 import org.joml.Vector3f;
 import org.lwjgl.opengl.*;
 
@@ -11,6 +14,104 @@ import static org.lwjgl.opengl.GL33.*;
 public class Chunk {
 
     public float[] verts;
+    Map<BlockType, TextureCoords> blockTextures = new HashMap<>();
+
+    // Function to combine vertex positions and texture coordinates
+    public List<Float> combineVertexData(float[] positions, float[] texCoords) {
+        List<Float> combined = new ArrayList<>();
+        for (int i = 0, j = 0; i < positions.length; i += 3, j += 2) {
+            combined.add(positions[i]);
+            combined.add(positions[i + 1]);
+            combined.add(positions[i + 2]);
+            combined.add(texCoords[j]);
+            combined.add(texCoords[j + 1]);
+        }
+        return combined;
+    }
+    float[] defaultTexCoords = {
+            0.0f, 1.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            1.0f, 0.0f,
+            0.0f, 1.0f,
+            0.0f, 0.0f
+    };
+
+    public enum FaceType {
+        TOP, LEFT, FRONT, BACK, BOTTOM, RIGHT
+    }
+    public float[] getTextureCoords(TextureCoords cords, FaceType faceType){
+        float tileWidth = 1.0f / cords.tileAcross;
+        float startX = cords.x * tileWidth;
+        float startY = cords.y * tileWidth;
+        float endX = startX + tileWidth;
+        float endY = startY + tileWidth;
+
+        switch(faceType) {
+            case TOP:
+                // Assuming TOP needs standard orientation
+                return new float[]{
+                        startX, endY,
+                        endX, startY,
+                        endX, endY,
+                        endX, startY,
+                        startX, endY,
+                        startX, startY
+                };
+            case LEFT:
+                // Assuming LEFT needs to be flipped vertically
+                return new float[] {
+                        startX, startY,
+                        endX, startY,
+                        endX, endY,
+                        endX, endY,
+                        startX, endY,
+                        startX, startY
+                };
+            case FRONT:
+                // Assuming FRONT needs to be flipped horizontally
+                return new float[] {
+                        startX, endY,
+                        endX, endY,
+                        endX, startY,
+                        endX, startY,
+                        startX, startY,
+                        startX, endY
+                };
+            case BACK:
+                // Assuming BACK face orientation is same as FRONT
+                return new float[] {
+                        endX, endY,
+                        startX, startY,
+                        startX, endY,
+                        startX, startY,
+                        endX, endY,
+                        endX, startY
+                };
+            case BOTTOM:
+                // Assuming BOTTOM face orientation is same as TOP
+                return new float[] {
+                        startX, startY,
+                        endX, startY,
+                        endX, endY,
+                        endX, endY,
+                        startX, endY,
+                        startX, startY
+                };
+            case RIGHT:
+                // Assuming RIGHT face orientation is same as LEFT
+                return new float[] {
+                        startX, startY,
+                        endX, endY,
+                        endX, startY,
+                        endX, endY,
+                        startX, startY,
+                        startX, endY
+                };
+            default:
+                return null; // or some default value
+        }
+    }
 
     private void generateTopFace(int x,int y,int z){
         ArrayList<Float> vertices = new ArrayList<>();
@@ -18,16 +119,27 @@ public class Chunk {
         float topY = y + 1.0f;  // top face Y-coordinate
 
         // Define the vertices for the top face of the block
-        Float [] verts ={
-                -0.5f+x,  y+0.5f, -0.5f+z,  0.0f, 1.0f, // top-left
-                0.5f+x,  y+0.5f,  0.5f+z,  1.0f, 0.0f, // bottom-right
-                0.5f+x,  y+0.5f, -0.5f+z,  1.0f, 1.0f, // top-right
-                0.5f+x,  y+0.5f,  0.5f+z,  1.0f, 0.0f, // bottom-right
-                -0.5f+x,  y+0.5f, -0.5f+z,  0.0f, 1.0f, // top-left
-                -0.5f+x,  y+0.5f,  0.5f+z,  0.0f, 0.0f  // bottom-left
+        float [] verts ={
+                -0.5f+x,  y+0.5f, -0.5f+z, // top-left
+                0.5f+x,  y+0.5f,  0.5f+z, // bottom-right
+                0.5f+x,  y+0.5f, -0.5f+z, // top-right
+                0.5f+x,  y+0.5f,  0.5f+z, // bottom-right
+                -0.5f+x,  y+0.5f, -0.5f+z, // top-left
+                -0.5f+x,  y+0.5f,  0.5f+z, // bottom-left
 
         };
-        verticesList.addAll(List.of(verts));
+        // Generate the default verts array
+        List<Float> vertsList;
+        BlockType blockType = chunkData.get(x-(int)(World.chunkSizeX*position.x)).get(z-(int)(World.chunkSizeZ*position.z)).get(y);
+        if(blockType == BlockType.SIDEDIRT) {
+            vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.GRASS), FaceType.TOP));
+        } else if(blockType == BlockType.SIDESNOW){
+            vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.SNOW), FaceType.TOP));
+        } else {
+             vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP));
+        }
+
+        verticesList.addAll(vertsList);
 
     }
     private void generateFrontFace(int x,int y,int z){
@@ -36,17 +148,20 @@ public class Chunk {
         float topY = y + 1.0f;  // top face Y-coordinate
 
         // Define the vertices for the top face of the block
-        Float [] verts ={
+        float [] verts ={
                 // Front face
-                -0.5f+x, -0.5f+y,  0.5f+z,  0.0f, 0.0f, // bottom-left
-                0.5f+x, -0.5f+y,  0.5f+z,  1.0f, 0.0f, // bottom-right
-                0.5f+x,  0.5f+y,  0.5f+z,  1.0f, 1.0f, // top-right
-                0.5f+x,  0.5f+y,  0.5f+z,  1.0f, 1.0f, // top-right
-                -0.5f+x,  0.5f+y,  0.5f+z,  0.0f, 1.0f, // top-left
-                -0.5f+x, -0.5f+y,  0.5f+z,  0.0f, 0.0f, // bottom-left
+                -0.5f+x, -0.5f+y,  0.5f+z, // bottom-left
+                0.5f+x, -0.5f+y,  0.5f+z, // bottom-right
+                0.5f+x,  0.5f+y,  0.5f+z, // top-right
+                0.5f+x,  0.5f+y,  0.5f+z, // top-right
+                -0.5f+x,  0.5f+y,  0.5f+z,// top-left
+                -0.5f+x, -0.5f+y,  0.5f+z,// bottom-left
 
         };
-        verticesList.addAll(List.of(verts));
+        List<Float> vertsList;
+        BlockType blockType = chunkData.get(x-(int)(World.chunkSizeX*position.x)).get(z-(int)(World.chunkSizeZ*position.z)).get(y);
+        vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.FRONT));
+        verticesList.addAll(vertsList);
 
     }
     private void generateLeftFace(int x,int y,int z){
@@ -55,17 +170,20 @@ public class Chunk {
         float topY = y + 1.0f;  // top face Y-coordinate
 
         // Define the vertices for the top face of the block
-        Float [] verts ={
+        float [] verts ={
                 // Left face
-                -0.5f+x,  0.5f+y,  0.5f+z,  1.0f, 1.0f, // top-right
-                -0.5f+x ,  0.5f+y, -0.5f+z,  0.0f, 1.0f, // top-left
-                -0.5f+x , -0.5f+y, -0.5f+z,  0.0f, 0.0f, // bottom-left
-                -0.5f+x , -0.5f+y, -0.5f+z  ,  0.0f, 0.0f, // bottom-left
-                -0.5f+x, -0.5f+y,  0.5f+z,  1.0f, 0.0f, // bottom-right
-                -0.5f+x ,  0.5f+y,  0.5f+z,  1.0f, 1.0f, // top-right
+                -0.5f+x,  0.5f+y,  0.5f+z, // top-right
+                -0.5f+x ,  0.5f+y, -0.5f+z, // top-left
+                -0.5f+x , -0.5f+y, -0.5f+z,  // bottom-left
+                -0.5f+x , -0.5f+y, -0.5f+z, // bottom-left
+                -0.5f+x, -0.5f+y,  0.5f+z, // bottom-right
+                -0.5f+x ,  0.5f+y,  0.5f+z,  // top-right
 
         };
-        verticesList.addAll(List.of(verts));
+        List<Float> vertsList;
+        BlockType blockType = chunkData.get(x-(int)(World.chunkSizeX*position.x)).get(z-(int)(World.chunkSizeZ*position.z)).get(y);
+        vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.LEFT));
+        verticesList.addAll(vertsList);
 
     }
     private void generateRightFace(int x,int y,int z){
@@ -74,34 +192,42 @@ public class Chunk {
         float topY = y + 1.0f;  // top face Y-coordinate
 
         // Define the vertices for the top face of the block
-        Float [] verts ={
-                0.5f+x,  0.5f+y,  0.5f+z,  0.0f, 1.0f, // top-left
-                0.5f+x, -0.5f+y, -0.5f+z,  1.0f, 0.0f, // bottom-right
-                0.5f+x,  0.5f+y, -0.5f+z,  1.0f, 1.0f, // top-right
-                0.5f+x, -0.5f+y, -0.5f+z,  1.0f, 0.0f, // bottom-right
-                0.5f+x,  0.5f+y,  0.5f+z,  0.0f, 1.0f, // top-left
-                0.5f+x, -0.5f+y,  0.5f+z,  0.0f, 0.0f, // bottom-left
+        float [] verts ={
+                0.5f+x,  0.5f+y,  0.5f+z, // top-left
+                0.5f+x, -0.5f+y, -0.5f+z,   // bottom-right
+                0.5f+x,  0.5f+y, -0.5f+z,   // top-right
+                0.5f+x, -0.5f+y, -0.5f+z,  // bottom-right
+                0.5f+x,  0.5f+y,  0.5f+z,   // top-left
+                0.5f+x, -0.5f+y,  0.5f+z,  // bottom-left
 
         };
-        verticesList.addAll(List.of(verts));
+        List<Float> vertsList;
+        BlockType blockType = chunkData.get(x-(int)(World.chunkSizeX*position.x)).get(z-(int)(World.chunkSizeZ*position.z)).get(y);
+        vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.RIGHT));
+        verticesList.addAll(vertsList);
 
     }
     private void generateBackFace(int x,int y,int z){
-        ArrayList<Float> vertices = new ArrayList<>();
 
         float topY = y + 1.0f;  // top face Y-coordinate
 
         // Define the vertices for the top face of the block
-        Float [] verts ={
-                -0.5f+x, -0.5f+y, -0.5f+z,  0.0f, 0.0f, // Bottom-left
-                0.5f+x,  0.5f+y, -0.5f+z,  1.0f, 1.0f, // top-right
-                0.5f+x, -0.5f+y, -0.5f+z,  1.0f, 0.0f, // bottom-right
-                0.5f+x,  0.5f+y, -0.5f+z,  1.0f, 1.0f, // top-right
-                -0.5f+x, -0.5f+y, -0.5f+z,  0.0f, 0.0f, // bottom-left
-                -0.5f+x,  0.5f+y, -0.5f+z,  0.0f, 1.0f, // top-left
+        float [] verts ={
+                -0.5f+x, -0.5f+y, -0.5f+z,  // Bottom-left
+                0.5f+x,  0.5f+y, -0.5f+z,   // top-right
+                0.5f+x, -0.5f+y, -0.5f+z,  // bottom-right
+                0.5f+x,  0.5f+y, -0.5f+z,   // top-right
+                -0.5f+x, -0.5f+y, -0.5f+z,   // bottom-left
+                -0.5f+x,  0.5f+y, -0.5f+z,   // top-left
 
         };
-        verticesList.addAll(List.of(verts));
+
+        List<Float> vertsList;
+        BlockType blockType = chunkData.get(x-(int)(World.chunkSizeX*position.x)).get(z-(int)(World.chunkSizeZ*position.z)).get(y);
+
+        vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.BACK));
+
+        verticesList.addAll(vertsList);
 
     }
     private void generateBotFace(int x,int y,int z){
@@ -110,16 +236,17 @@ public class Chunk {
         float topY = y + 1.0f;  // top face Y-coordinate
 
         // Define the vertices for the top face of the block
-        Float [] verts ={
-                -0.5f+x, -0.5f+y, -0.5f+z,  0.0f, 1.0f, // top-right
-                0.5f+x, -0.5f+y, -0.5f+z,  1.0f, 1.0f, // top-left
-                0.5f+x, -0.5f+y,  0.5f+z   ,  1.0f, 0.0f, // bottom-left
-                0.5f+x, -0.5f+y,  0.5f+z,  1.0f, 0.0f, // bottom-left
-                -0.5f+x, -0.5f+y,  0.5f+z,  0.0f, 0.0f, // bottom-right
-                -0.5f+x, -0.5f+y, -0.5f+z,  0.0f, 1.0f, // top-right
+        float [] verts ={
+                -0.5f+x, -0.5f+y, -0.5f+z,   // top-right
+                0.5f+x, -0.5f+y, -0.5f+z,   // top-left
+                0.5f+x, -0.5f+y,  0.5f+z,   // bottom-left
+                0.5f+x, -0.5f+y,  0.5f+z,   // bottom-left
+                -0.5f+x, -0.5f+y,  0.5f+z,  // bottom-right
+                -0.5f+x, -0.5f+y, -0.5f+z,   // top-right
 
         };
-        verticesList.addAll(List.of(verts));
+        List<Float> vertsList = combineVertexData(verts, defaultTexCoords);
+        verticesList.addAll(vertsList);
 
     }
 
@@ -130,7 +257,34 @@ public class Chunk {
        GRASS,
        DIRT,
        STONE,
+       SIDEDIRT,
+       PLANKS,
+       COBBLESTONE,
+       WATER,
+       SNOW,
+       SIDESNOW,
    }
+
+    public class TextureCoords {
+        public int x;
+        public int y;
+
+        public int tileAcross = 16;
+
+        public TextureCoords(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+    }
+
+
+
+
+
+
+
+
     ArrayList<ArrayList<ArrayList<BlockType>>> chunkData = new ArrayList<>();
 
     public int VAO;
@@ -143,6 +297,16 @@ public class Chunk {
 
 
     public Chunk (Vector3f position){
+
+        blockTextures.put(BlockType.GRASS, new TextureCoords(0,0));
+        blockTextures.put(BlockType.STONE, new TextureCoords(1,0));
+        blockTextures.put(BlockType.DIRT, new TextureCoords(2,0));
+        blockTextures.put(BlockType.SIDEDIRT, new TextureCoords(3,0));
+        blockTextures.put(BlockType.PLANKS, new TextureCoords(4,0));
+        blockTextures.put(BlockType.COBBLESTONE, new TextureCoords(0,1));
+        blockTextures.put(BlockType.WATER, new TextureCoords(15,13));
+        blockTextures.put(BlockType.SNOW, new TextureCoords(2,4));
+        blockTextures.put(BlockType.SIDESNOW, new TextureCoords(4,4));
 
         FastNoiseLite noise = new FastNoiseLite();
         noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
@@ -169,7 +333,17 @@ public class Chunk {
             for (int z = 0; z < World.chunkSizeZ; z++) {
                 ArrayList<BlockType> zList = xList.get(z);
                 for (int y = 0; y < World.chunkSizeY; y++) {
-                    zList.set(y+(int)Math.floor((noise.GetNoise(x+(World.chunkSizeX*position.x), z+(World.chunkSizeZ*position.z))+1)*10), BlockType.GRASS);
+
+                    int noiseY = (int)Math.floor((noise.GetNoise(x+(World.chunkSizeX*position.x), z+(World.chunkSizeZ*position.z))+1)*10);
+                    if(noiseY + y < 64){
+                        zList.set(y+noiseY, BlockType.STONE);
+                    } else if (y == World.chunkSizeY-1 && noiseY + y < 78){
+                        zList.set(y+noiseY, BlockType.SIDEDIRT);
+                    } else if(y == World.chunkSizeY-1){
+                        zList.set(y+noiseY, BlockType.SIDESNOW);
+                    } else {
+                        zList.set(y+noiseY, BlockType.DIRT);
+                    }
                 }
             }
         }

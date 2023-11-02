@@ -10,8 +10,8 @@ public class World {
 
     static int worldSizeY = 256;
 
-    static int worldSizeX = 4;
-    static int worldSize = 4;
+    static int worldSizeX = 8;
+    static int worldSize = 8;
 
 
     // Let's make dumb and simple start
