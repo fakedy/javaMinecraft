@@ -21,10 +21,8 @@ public class Engine {
         Camera camera = new Camera();
         Renderer renderer = new Renderer(window, camera);
         renderer.setupRender();
-        ShaderCompiler shaderCompiler = new ShaderCompiler("src/resources/shaders/default_vertex.glsl", "src/resources/shaders/default_fragment.glsl");
-        TextureLoader.loadFile("src/resources/textures/atlas.png");
-        shaderCompiler.setInt("ourTexture", 0);
-        renderer.shader = shaderCompiler;
+
+        TextureLoader.loadTexture("src/resources/textures/atlas.png");
         InputManager inputManager = new InputManager(window.getWindowHandle());
         Game game = new Game(camera);
         game.start();

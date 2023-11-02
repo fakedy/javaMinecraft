@@ -19,12 +19,15 @@ public class Chunk {
     // Function to combine vertex positions and texture coordinates
     public List<Float> combineVertexData(float[] positions, float[] texCoords) {
         List<Float> combined = new ArrayList<>();
-        for (int i = 0, j = 0; i < positions.length; i += 3, j += 2) {
-            combined.add(positions[i]);
-            combined.add(positions[i + 1]);
-            combined.add(positions[i + 2]);
-            combined.add(texCoords[j]);
-            combined.add(texCoords[j + 1]);
+        for (int i = 0, j = 0; i < positions.length; i += 6, j += 2) {
+            combined.add(positions[i]);     // x
+            combined.add(positions[i + 1]); // y
+            combined.add(positions[i + 2]); // z
+            combined.add(positions[i + 3]); // a
+            combined.add(positions[i + 4]); // b
+            combined.add(positions[i + 5]); // c
+            combined.add(texCoords[j]);     // u
+            combined.add(texCoords[j + 1]); // v
         }
         return combined;
     }
@@ -120,12 +123,12 @@ public class Chunk {
 
         // Define the vertices for the top face of the block
         float [] verts ={
-                -0.5f+x,  y+0.5f, -0.5f+z, // top-left
-                0.5f+x,  y+0.5f,  0.5f+z, // bottom-right
-                0.5f+x,  y+0.5f, -0.5f+z, // top-right
-                0.5f+x,  y+0.5f,  0.5f+z, // bottom-right
-                -0.5f+x,  y+0.5f, -0.5f+z, // top-left
-                -0.5f+x,  y+0.5f,  0.5f+z, // bottom-left
+                -0.5f+x,  y+0.5f, -0.5f+z, 0.0f,  1.0f,  0.0f,// top-left
+                0.5f+x,  y+0.5f,  0.5f+z,  0.0f,  1.0f,  0.0f,// bottom-right
+                0.5f+x,  y+0.5f, -0.5f+z,  0.0f,  1.0f,  0.0f,// top-right
+                0.5f+x,  y+0.5f,  0.5f+z,  0.0f,  1.0f,  0.0f,// bottom-right
+                -0.5f+x,  y+0.5f, -0.5f+z, 0.0f,  1.0f,  0.0f,// top-left
+                -0.5f+x,  y+0.5f,  0.5f+z, 0.0f,  1.0f,  0.0f,// bottom-left
 
         };
         // Generate the default verts array
@@ -150,12 +153,12 @@ public class Chunk {
         // Define the vertices for the top face of the block
         float [] verts ={
                 // Front face
-                -0.5f+x, -0.5f+y,  0.5f+z, // bottom-left
-                0.5f+x, -0.5f+y,  0.5f+z, // bottom-right
-                0.5f+x,  0.5f+y,  0.5f+z, // top-right
-                0.5f+x,  0.5f+y,  0.5f+z, // top-right
-                -0.5f+x,  0.5f+y,  0.5f+z,// top-left
-                -0.5f+x, -0.5f+y,  0.5f+z,// bottom-left
+                -0.5f+x, -0.5f+y,  0.5f+z, 0.0f,  0.0f,  1.0f, // bottom-left
+                0.5f+x, -0.5f+y,  0.5f+z,  0.0f,  0.0f,  1.0f,// bottom-right
+                0.5f+x,  0.5f+y,  0.5f+z,  0.0f,  0.0f,  1.0f,// top-right
+                0.5f+x,  0.5f+y,  0.5f+z,  0.0f,  0.0f,  1.0f,// top-right
+                -0.5f+x,  0.5f+y,  0.5f+z, 0.0f,  0.0f,  1.0f,// top-left
+                -0.5f+x, -0.5f+y,  0.5f+z, 0.0f,  0.0f,  1.0f,// bottom-left
 
         };
         List<Float> vertsList;
@@ -172,12 +175,12 @@ public class Chunk {
         // Define the vertices for the top face of the block
         float [] verts ={
                 // Left face
-                -0.5f+x,  0.5f+y,  0.5f+z, // top-right
-                -0.5f+x ,  0.5f+y, -0.5f+z, // top-left
-                -0.5f+x , -0.5f+y, -0.5f+z,  // bottom-left
-                -0.5f+x , -0.5f+y, -0.5f+z, // bottom-left
-                -0.5f+x, -0.5f+y,  0.5f+z, // bottom-right
-                -0.5f+x ,  0.5f+y,  0.5f+z,  // top-right
+                -0.5f+x,  0.5f+y,  0.5f+z,  -1.0f,  0.0f,  0.0f, // top-right
+                -0.5f+x ,  0.5f+y, -0.5f+z, -1.0f,  0.0f,  0.0f, // top-left
+                -0.5f+x , -0.5f+y, -0.5f+z, -1.0f,  0.0f,  0.0f, // bottom-left
+                -0.5f+x , -0.5f+y, -0.5f+z, -1.0f,  0.0f,  0.0f,// bottom-left
+                -0.5f+x, -0.5f+y,  0.5f+z,  -1.0f,  0.0f,  0.0f,// bottom-right
+                -0.5f+x ,  0.5f+y,  0.5f+z, -1.0f,  0.0f,  0.0f, // top-right
 
         };
         List<Float> vertsList;
@@ -193,12 +196,12 @@ public class Chunk {
 
         // Define the vertices for the top face of the block
         float [] verts ={
-                0.5f+x,  0.5f+y,  0.5f+z, // top-left
-                0.5f+x, -0.5f+y, -0.5f+z,   // bottom-right
-                0.5f+x,  0.5f+y, -0.5f+z,   // top-right
-                0.5f+x, -0.5f+y, -0.5f+z,  // bottom-right
-                0.5f+x,  0.5f+y,  0.5f+z,   // top-left
-                0.5f+x, -0.5f+y,  0.5f+z,  // bottom-left
+                0.5f+x,  0.5f+y,  0.5f+z, 1.0f,  0.0f,  0.0f, // top-left
+                0.5f+x, -0.5f+y, -0.5f+z, 1.0f,  0.0f,  0.0f,  // bottom-right
+                0.5f+x,  0.5f+y, -0.5f+z, 1.0f,  0.0f,  0.0f, // top-right
+                0.5f+x, -0.5f+y, -0.5f+z, 1.0f,  0.0f,  0.0f, // bottom-right
+                0.5f+x,  0.5f+y,  0.5f+z, 1.0f,  0.0f,  0.0f, // top-left
+                0.5f+x, -0.5f+y,  0.5f+z, 1.0f,  0.0f,  0.0f,// bottom-left
 
         };
         List<Float> vertsList;
@@ -213,12 +216,12 @@ public class Chunk {
 
         // Define the vertices for the top face of the block
         float [] verts ={
-                -0.5f+x, -0.5f+y, -0.5f+z,  // Bottom-left
-                0.5f+x,  0.5f+y, -0.5f+z,   // top-right
-                0.5f+x, -0.5f+y, -0.5f+z,  // bottom-right
-                0.5f+x,  0.5f+y, -0.5f+z,   // top-right
-                -0.5f+x, -0.5f+y, -0.5f+z,   // bottom-left
-                -0.5f+x,  0.5f+y, -0.5f+z,   // top-left
+                -0.5f+x, -0.5f+y, -0.5f+z, 0.0f,  0.0f,  -1.0f,  // Bottom-left
+                0.5f+x,  0.5f+y, -0.5f+z,  0.0f,  0.0f,  -1.0f, // top-right
+                0.5f+x, -0.5f+y, -0.5f+z,  0.0f,  0.0f,  -1.0f,// bottom-right
+                0.5f+x,  0.5f+y, -0.5f+z,  0.0f,  0.0f,  -1.0f,// top-right
+                -0.5f+x, -0.5f+y, -0.5f+z, 0.0f,  0.0f,  -1.0f, // bottom-left
+                -0.5f+x,  0.5f+y, -0.5f+z, 0.0f,  0.0f,  -1.0f, // top-left
 
         };
 
@@ -237,12 +240,12 @@ public class Chunk {
 
         // Define the vertices for the top face of the block
         float [] verts ={
-                -0.5f+x, -0.5f+y, -0.5f+z,   // top-right
-                0.5f+x, -0.5f+y, -0.5f+z,   // top-left
-                0.5f+x, -0.5f+y,  0.5f+z,   // bottom-left
-                0.5f+x, -0.5f+y,  0.5f+z,   // bottom-left
-                -0.5f+x, -0.5f+y,  0.5f+z,  // bottom-right
-                -0.5f+x, -0.5f+y, -0.5f+z,   // top-right
+                -0.5f+x, -0.5f+y, -0.5f+z, 0.0f,  -1.0f,  0.0f,   // top-right
+                0.5f+x, -0.5f+y, -0.5f+z,  0.0f,  -1.0f,  0.0f, // top-left
+                0.5f+x, -0.5f+y,  0.5f+z,  0.0f,  -1.0f,  0.0f, // bottom-left
+                0.5f+x, -0.5f+y,  0.5f+z,  0.0f,  -1.0f,  0.0f,// bottom-left
+                -0.5f+x, -0.5f+y,  0.5f+z, 0.0f,  -1.0f,  0.0f, // bottom-right
+                -0.5f+x, -0.5f+y, -0.5f+z, 0.0f,  -1.0f,  0.0f,  // top-right
 
         };
         List<Float> vertsList = combineVertexData(verts, defaultTexCoords);
@@ -334,7 +337,7 @@ public class Chunk {
                 ArrayList<BlockType> zList = xList.get(z);
                 for (int y = 0; y < World.chunkSizeY; y++) {
 
-                    int noiseY = (int)Math.floor((noise.GetNoise(x+(World.chunkSizeX*position.x), z+(World.chunkSizeZ*position.z))+1)*10);
+                    int noiseY = (int)Math.floor((noise.GetNoise(x+(World.chunkSizeX*position.x), z+(World.chunkSizeZ*position.z))+1)*8);
                     if(noiseY + y < 64){
                         zList.set(y+noiseY, BlockType.STONE);
                     } else if (y == World.chunkSizeY-1 && noiseY + y < 78){
@@ -354,7 +357,7 @@ public class Chunk {
             for (int z = 0; z < World.chunkSizeZ; z++){
                 for (int y = 0; y < World.chunkSizeY; y++){
 
-                    int height = (int)Math.floor((noise.GetNoise(x+(World.chunkSizeX*position.x), z+(World.chunkSizeZ*position.z))+1)*10);
+                    int height = (int)Math.floor((noise.GetNoise(x+(World.chunkSizeX*position.x), z+(World.chunkSizeZ*position.z))+1)*8);
                     if(chunkData.get(x).get(z).get(y+height) != BlockType.AIR) {
 
 
@@ -406,12 +409,16 @@ public class Chunk {
         glBufferData(GL_ARRAY_BUFFER, verts, GL_STATIC_DRAW);
 
         // position attribute
-        GL33.glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 5 * Float.BYTES, 0);
+        GL33.glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 0);
 
         glEnableVertexAttribArray(0);
-        // color attribute
-        GL33.glVertexAttribPointer(1, 2, GL33.GL_FLOAT, false, 5 * Float.BYTES, 3 * Float.BYTES);
+
+        // normal attribute
+        GL33.glVertexAttribPointer(1, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
         glEnableVertexAttribArray(1);
+        // color attribute
+        GL33.glVertexAttribPointer(2, 2, GL33.GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
+        glEnableVertexAttribArray(2);
     }
 
 

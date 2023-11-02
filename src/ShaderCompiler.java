@@ -65,6 +65,12 @@ public class ShaderCompiler {
 
     }
 
+    void use(){
+
+        glUseProgram(shaderProgram);
+
+    }
+
     String readFile (String path){
 
         StringBuilder content = new StringBuilder();

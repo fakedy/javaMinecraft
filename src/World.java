@@ -26,6 +26,8 @@ public class World {
             }
 
         }
+        Skybox sky = new Skybox();
+        Renderer.skybox = sky;
 
 
     }
