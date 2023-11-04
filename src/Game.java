@@ -2,7 +2,7 @@ import org.joml.Vector3f;
 
 public class Game {
 
-    private Camera camera;
+    public static Camera camera;
     private Player player;
 
     private World world;
@@ -26,8 +26,6 @@ public class Game {
         camera.Follow(player);
         camera.update();
         world.updateWorld();
-
-
 
     }
 

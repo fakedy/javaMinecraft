@@ -13,6 +13,7 @@ import static org.lwjgl.opengl.GL33.*;
 
 public class Chunk {
 
+
     public float[] verts;
     Map<BlockType, TextureCoords> blockTextures = new HashMap<>();
 
@@ -44,7 +45,7 @@ public class Chunk {
         TOP, LEFT, FRONT, BACK, BOTTOM, RIGHT
     }
     public float[] getTextureCoords(TextureCoords cords, FaceType faceType){
-        float tileWidth = 1.0f / cords.tileAcross;
+        float tileWidth = 1.0f / cords.tileAcross; // prob 16
         float startX = cords.x * tileWidth;
         float startY = cords.y * tileWidth;
         float endX = startX + tileWidth;
@@ -248,14 +249,17 @@ public class Chunk {
                 -0.5f+x, -0.5f+y, -0.5f+z, 0.0f,  -1.0f,  0.0f,  // top-right
 
         };
-        List<Float> vertsList = combineVertexData(verts, defaultTexCoords);
+        List<Float> vertsList;
+        BlockType blockType = chunkData.get(x-(int)(World.chunkSizeX*position.x)).get(z-(int)(World.chunkSizeZ*position.z)).get(y);
+        vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.BOTTOM));
+
         verticesList.addAll(vertsList);
 
     }
 
     ArrayList<Float> verticesList = new ArrayList<>();
 
-   private enum BlockType{
+   public enum BlockType{
        AIR,
        GRASS,
        DIRT,
@@ -266,6 +270,7 @@ public class Chunk {
        WATER,
        SNOW,
        SIDESNOW,
+       BEDROCK,
    }
 
     public class TextureCoords {
@@ -281,22 +286,28 @@ public class Chunk {
 
     }
 
-
-
-
-
-
-
-
     ArrayList<ArrayList<ArrayList<BlockType>>> chunkData = new ArrayList<>();
 
     public int VAO;
+    public int VBO;
     public Vector3f position;
-
-    // Create and configure FastNoise object
+    FastNoiseLite noise;
 
 
     // Gather noise data
+
+    public int getNoiseY(int x, int y, int z){
+
+        float frequency = 0.65f;
+        float result = (
+                1 * (noise.GetNoise((x+(World.chunkSizeX*position.x))*frequency, (z+(World.chunkSizeZ*position.z))*frequency)+1))
+                + 0.5f * ((noise.GetNoise((x+(World.chunkSizeX*position.x))*frequency*2, (z+(World.chunkSizeZ*position.z))*frequency*2)+1))
+                + 0.25f * ((noise.GetNoise((x+(World.chunkSizeX*position.x))*frequency*4, (z+(World.chunkSizeZ*position.z))*frequency*4)+1));
+
+        result = (float)Math.pow(result, 2.64f);
+
+        return (int)Math.floor(result*2);
+    }
 
 
     public Chunk (Vector3f position){
@@ -310,12 +321,15 @@ public class Chunk {
         blockTextures.put(BlockType.WATER, new TextureCoords(15,13));
         blockTextures.put(BlockType.SNOW, new TextureCoords(2,4));
         blockTextures.put(BlockType.SIDESNOW, new TextureCoords(4,4));
+        blockTextures.put(BlockType.BEDROCK, new TextureCoords(1,1));
 
-        FastNoiseLite noise = new FastNoiseLite();
+        noise = new FastNoiseLite();
         noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
 
 
         this.position = position;
+
+        //System.out.println("Created chunk at: " + position);
 
         // create empty blocks of air
         for (int x = 0; x < World.chunkSizeX; x++){
@@ -337,7 +351,8 @@ public class Chunk {
                 ArrayList<BlockType> zList = xList.get(z);
                 for (int y = 0; y < World.chunkSizeY; y++) {
 
-                    int noiseY = (int)Math.floor((noise.GetNoise(x+(World.chunkSizeX*position.x), z+(World.chunkSizeZ*position.z))+1)*8);
+                    int noiseY = getNoiseY(x,y,z);
+
                     if(noiseY + y < 64){
                         zList.set(y+noiseY, BlockType.STONE);
                     } else if (y == World.chunkSizeY-1 && noiseY + y < 78){
@@ -346,52 +361,17 @@ public class Chunk {
                         zList.set(y+noiseY, BlockType.SIDESNOW);
                     } else {
                         zList.set(y+noiseY, BlockType.DIRT);
+
                     }
+
                 }
             }
         }
 
 
 
-        for (int x = 0; x < World.chunkSizeX; x++){
-            for (int z = 0; z < World.chunkSizeZ; z++){
-                for (int y = 0; y < World.chunkSizeY; y++){
+        generateData();
 
-                    int height = (int)Math.floor((noise.GetNoise(x+(World.chunkSizeX*position.x), z+(World.chunkSizeZ*position.z))+1)*8);
-                    if(chunkData.get(x).get(z).get(y+height) != BlockType.AIR) {
-
-
-
-
-                        if(z == 0 || (z < World.chunkSizeZ - 1 && chunkData.get(x).get(z-1).get(y+height) == BlockType.AIR))
-                            generateBackFace(x+(int)(World.chunkSizeX*position.x),y+height,z+ (int)(World.chunkSizeZ*position.z));
-
-                        if(z == World.chunkSizeZ - 1 || (z < World.chunkSizeZ - 1 && chunkData.get(x).get(z+1).get(y+height) == BlockType.AIR))
-                            generateFrontFace(x+(int)(World.chunkSizeX*position.x),y+height,z + (int)(World.chunkSizeZ*position.z));
-
-
-                        if(x == 0 || (x < World.chunkSizeX - 1 && chunkData.get(x-1).get(z).get(y+height) == BlockType.AIR))
-                            generateLeftFace(x+(int)(World.chunkSizeX*position.x),y+height,z + (int)(World.chunkSizeZ*position.z));
-
-                        if(x == World.chunkSizeX - 1 || (x < World.chunkSizeX - 1 && chunkData.get(x+1).get(z).get(y+height) == BlockType.AIR))
-                            generateRightFace(x+(int)(World.chunkSizeX*position.x),y+height,z + (int)(World.chunkSizeZ*position.z));
-
-                        if(y+height == height || (y+height < World.chunkSizeY - 1+height && chunkData.get(x).get(z).get(y-1+height) == BlockType.AIR))
-                            generateBotFace(x+(int)(World.chunkSizeX*position.x),y+height,z + (int)(World.chunkSizeZ*position.z));
-
-                        // only render top if above is air
-                        if(y+height == World.chunkSizeY - 1+height || (y+height < World.chunkSizeY - 1+height && chunkData.get(x).get(z).get(y+1+height) == BlockType.AIR))
-                            generateTopFace(x+(int)(World.chunkSizeX*position.x),y+height,z + (int)(World.chunkSizeZ*position.z));
-
-                    }
-                }
-            }
-        }
-
-        verts = new float[verticesList.size()];
-        for (int i = 0; i < verticesList.size(); i++) {
-            verts[i] = verticesList.get(i);
-        }
 
         generateMesh();
 
@@ -401,7 +381,8 @@ public class Chunk {
     private void generateMesh(){
 
         VAO = GL33.glGenVertexArrays();
-        int VBO = GL33.glGenBuffers();
+        VBO = GL33.glGenBuffers();
+
         // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
         glBindVertexArray(VAO);
 
@@ -419,6 +400,60 @@ public class Chunk {
         // color attribute
         GL33.glVertexAttribPointer(2, 2, GL33.GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
         glEnableVertexAttribArray(2);
+    }
+
+    private void generateData(){
+        for (int x = 0; x < World.chunkSizeX; x++){
+            for (int z = 0; z < World.chunkSizeZ; z++){
+                for (int y = 0; y < World.chunkSizeY; y++){
+
+                    int height = getNoiseY(x,y,z);
+                    if(chunkData.get(x).get(z).get(y+height) != BlockType.AIR) {
+
+                        if(z == 0 || (z < World.chunkSizeZ && chunkData.get(x).get(z-1).get(y+height) == BlockType.AIR))
+                            generateBackFace(x+(int)(World.chunkSizeX*position.x),y+height,z+ (int)(World.chunkSizeZ*position.z));
+
+                        if(z == World.chunkSizeZ - 1 || (z < World.chunkSizeZ - 1 && chunkData.get(x).get(z+1).get(y+height) == BlockType.AIR))
+                            generateFrontFace(x+(int)(World.chunkSizeX*position.x),y+height,z + (int)(World.chunkSizeZ*position.z));
+
+
+                        if(x == 0 || (x < World.chunkSizeX && chunkData.get(x-1).get(z).get(y+height) == BlockType.AIR))
+                            generateLeftFace(x+(int)(World.chunkSizeX*position.x),y+height,z + (int)(World.chunkSizeZ*position.z));
+
+                        if(x == World.chunkSizeX - 1 || (x < World.chunkSizeX - 1 && chunkData.get(x+1).get(z).get(y+height) == BlockType.AIR))
+                            generateRightFace(x+(int)(World.chunkSizeX*position.x),y+height,z + (int)(World.chunkSizeZ*position.z));
+
+                        if(y+height == height  || (y+height < World.chunkSizeY+height && chunkData.get(x).get(z).get(y-1+height) == BlockType.AIR))
+                            generateBotFace(x+(int)(World.chunkSizeX*position.x),y+height,z + (int)(World.chunkSizeZ*position.z));
+
+                        // only render top if above is air
+                        if(y+height == World.chunkSizeY - 1+height || (y+height < World.chunkSizeY - 1+height && chunkData.get(x).get(z).get(y+1+height) == BlockType.AIR))
+                            generateTopFace(x+(int)(World.chunkSizeX*position.x),y+height,z + (int)(World.chunkSizeZ*position.z));
+
+                    }
+                }
+            }
+        }
+
+        // memory leak?
+        verts = new float[verticesList.size()];
+        for (int i = 0; i < verticesList.size(); i++) {
+            verts[i] = verticesList.get(i);
+        }
+    }
+    public void update(){
+
+        destroyMesh();
+        generateData();
+        generateMesh();
+    }
+
+    public void destroyMesh(){
+
+        GL33.glDeleteVertexArrays(VAO);
+        GL33.glDeleteBuffers(VBO);
+        verticesList.clear();
+
     }
 
 

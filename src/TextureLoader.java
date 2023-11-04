@@ -9,7 +9,7 @@ import org.lwjgl.stb.STBImage;
 public class TextureLoader {
 
 
-    static void loadTexture(String path) {
+    static int loadTexture(String path) {
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer width = stack.mallocInt(1);
@@ -40,8 +40,8 @@ public class TextureLoader {
             GL33.glActiveTexture(GL33.GL_TEXTURE0);
             GL33.glBindTexture(GL33.GL_TEXTURE_2D, texture);
             System.out.println(texture);
+            return texture;
         }
-
 
     }
 

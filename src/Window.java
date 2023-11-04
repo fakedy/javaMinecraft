@@ -15,7 +15,8 @@ public class Window {
 
 // here we will setup the game window
 
-    private long windowHandle;
+    public long windowHandle;
+    public int WINDOW_WIDTH = 1920, WINDOW_HEIGHT = 1080    ;
 
     public void run(){
 
@@ -75,6 +76,8 @@ public class Window {
         glfwSetFramebufferSizeCallback(windowHandle, (window, Width, Height) -> {
 
             GL33.glViewport(0,0, Width, Height);
+            WINDOW_WIDTH = Width;
+            WINDOW_HEIGHT = Height;
 
 
 

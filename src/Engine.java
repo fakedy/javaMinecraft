@@ -22,7 +22,8 @@ public class Engine {
         Renderer renderer = new Renderer(window, camera);
         renderer.setupRender();
 
-        TextureLoader.loadTexture("src/resources/textures/atlas.png");
+
+
         InputManager inputManager = new InputManager(window.getWindowHandle());
         Game game = new Game(camera);
         game.start();
