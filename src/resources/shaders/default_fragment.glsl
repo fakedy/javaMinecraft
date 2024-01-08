@@ -31,8 +31,8 @@ float get_fog_factor() {
     //if (fragDist <= fogmin)return 0.0; // fog edge
     fragDist = clamp(fragDist, fogmin, fogmax);
 
-
-    return 1.0 - (fogmax - fragDist) / (fogmax - fogmin); // everything between the fog edges
+    return 0.0;
+    //return 1.0 - (fogmax - fragDist) / (fogmax - fogmin); // everything between the fog edges
 }
 
 float ShadowCalculation(vec4 fragPosLightSpace)
@@ -60,7 +60,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 
 void main()
 {
-    vec3 color = texture(ourTexture, TexCoord).rgb;
+    vec4 color = texture(ourTexture, TexCoord).rgba;
     normal = normalize(Normal);
     vec3 lightColor = vec3(1.0, 0.95, 0.8);
     // ambient
@@ -79,10 +79,10 @@ void main()
     vec3 specular = spec * lightColor;
     // calculate shadow
     float shadow = ShadowCalculation(FragPosLightSpace);
-    vec3 lighting = (ambient +    (1.0 - shadow)* (diffuse + specular)) * color;
+    vec4 lighting = vec4(ambient +    (1.0 - shadow)* (diffuse + specular),1.0) * color;
     //float gamma = 2.2;
     //lighting.rgb = pow(lighting, vec3(1.0/gamma));
     float fogFactor = get_fog_factor();
 
-    FragColor = mix(vec4(lighting,1.0f), vec4(lightColor, 0.0), fogFactor);
+    FragColor = mix(vec4(lighting), vec4(lightColor, 0.0), fogFactor);
 }

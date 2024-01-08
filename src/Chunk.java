@@ -14,8 +14,6 @@ public class Chunk {
     ArrayList<ArrayList<ArrayList<BlockType>>> chunkData = new ArrayList<>();
     Map<BlockType, TextureCoords> blockTextures = new HashMap<>();
 
-    private int[][][] noiseArray = new int[World.chunkSizeX][World.chunkSizeY][World.chunkSizeZ];
-
     public int VAO;
     public int VBO;
     public Vector3f position;
@@ -126,19 +124,42 @@ public class Chunk {
 
     private void generateTopFace(int x, int y, int z) {
 
-        // Define the vertices for the top face of the block
-        float[] verts = {
-                -0.5f + x, y + 0.5f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-left
-                0.5f + x, y + 0.5f, 0.5f + z, 0.0f, 1.0f, 0.0f,// bottom-right
-                0.5f + x, y + 0.5f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-right
-                0.5f + x, y + 0.5f, 0.5f + z, 0.0f, 1.0f, 0.0f,// bottom-right
-                -0.5f + x, y + 0.5f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-left
-                -0.5f + x, y + 0.5f, 0.5f + z, 0.0f, 1.0f, 0.0f,// bottom-left
+        float[] verts;
 
-        };
+        BlockType blockType = chunkData.get(x - (int) (World.chunkSizeX * position.x)).get(z - (int) (World.chunkSizeZ * position.z)).get(y);
+
+        if(blockType == BlockType.WATER && chunkData.get(x - (int) (World.chunkSizeX * position.x)).get(z - (int) (World.chunkSizeZ * position.z)).get(y+1) == BlockType.AIR) {
+
+            verts = new float[]{
+                    -0.5f + x, y + 0.35f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-left
+                    0.5f + x, y + 0.35f, 0.5f + z, 0.0f, 1.0f, 0.0f,// bottom-right
+                    0.5f + x, y + 0.35f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-right
+                    0.5f + x, y + 0.35f, 0.5f + z, 0.0f, 1.0f, 0.0f,// bottom-right
+                    -0.5f + x, y + 0.35f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-left
+                    -0.5f + x, y + 0.35f, 0.5f + z, 0.0f, 1.0f, 0.0f,// bottom-left
+
+            };
+
+        } else {
+
+            verts = new float[]{
+                    -0.5f + x, y + 0.5f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-left
+                    0.5f + x, y + 0.5f, 0.5f + z, 0.0f, 1.0f, 0.0f,// bottom-right
+                    0.5f + x, y + 0.5f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-right
+                    0.5f + x, y + 0.5f, 0.5f + z, 0.0f, 1.0f, 0.0f,// bottom-right
+                    -0.5f + x, y + 0.5f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-left
+                    -0.5f + x, y + 0.5f, 0.5f + z, 0.0f, 1.0f, 0.0f,// bottom-left
+
+            };
+
+        }
+
+
+        // Define the vertices for the top face of the block
+
         // Generate the default verts array
         Float[] vertsList;
-        BlockType blockType = chunkData.get(x - (int) (World.chunkSizeX * position.x)).get(z - (int) (World.chunkSizeZ * position.z)).get(y);
+
         if (blockType == BlockType.SIDEDIRT) {
             vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.GRASS), FaceType.TOP));
         } else if (blockType == BlockType.SIDESNOW) {
@@ -156,69 +177,136 @@ public class Chunk {
 
     private void generateFace(int x, int y, int z, FaceType faceType){
 
+        BlockType blockType = chunkData.get(x - (int) (World.chunkSizeX * position.x)).get(z - (int) (World.chunkSizeZ * position.z)).get(y);
+
         float[] verts = new float[36];
 
-        switch (faceType) {
-            case FRONT:
-                verts = new float[]{
-                        // Front face
-                        -0.5f + x, -0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f, // bottom-left
-                        0.5f + x, -0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// bottom-right
-                        0.5f + x, 0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// top-right
-                        0.5f + x, 0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// top-right
-                        -0.5f + x, 0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// top-left
-                        -0.5f + x, -0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// bottom-left
+        if(blockType == BlockType.WATER && chunkData.get(x - (int) (World.chunkSizeX * position.x)).get(z - (int) (World.chunkSizeZ * position.z)).get(y+1) == BlockType.AIR){ // no reason to have this atm but maybe in future.
+            switch (faceType) {
 
-                };
-                break;
-            case LEFT:
-                verts = new float[] {
-                        // Left face
-                        -0.5f + x, 0.5f + y, 0.5f + z, -1.0f, 0.0f, 0.0f, // top-right
-                        -0.5f + x, 0.5f + y, -0.5f + z, -1.0f, 0.0f, 0.0f, // top-left
-                        -0.5f + x, -0.5f + y, -0.5f + z, -1.0f, 0.0f, 0.0f, // bottom-left
-                        -0.5f + x, -0.5f + y, -0.5f + z, -1.0f, 0.0f, 0.0f,// bottom-left
-                        -0.5f + x, -0.5f + y, 0.5f + z, -1.0f, 0.0f, 0.0f,// bottom-right
-                        -0.5f + x, 0.5f + y, 0.5f + z, -1.0f, 0.0f, 0.0f, // top-right
+                case FRONT:
+                    verts = new float[]{
+                            // Front face
+                            -0.5f + x, -0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f, // bottom-left
+                            0.5f + x, -0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// bottom-right
+                            0.5f + x, 0.35f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// top-right
+                            0.5f + x, 0.35f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// top-right
+                            -0.5f + x, 0.35f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// top-left
+                            -0.5f + x, -0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// bottom-left
 
-                };
-                break;
-            case RIGHT:
-                verts = new float[]{
-                        0.5f + x, 0.5f + y, 0.5f + z, 1.0f, 0.0f, 0.0f, // top-left
-                        0.5f + x, -0.5f + y, -0.5f + z, 1.0f, 0.0f, 0.0f,  // bottom-right
-                        0.5f + x, 0.5f + y, -0.5f + z, 1.0f, 0.0f, 0.0f, // top-right
-                        0.5f + x, -0.5f + y, -0.5f + z, 1.0f, 0.0f, 0.0f, // bottom-right
-                        0.5f + x, 0.5f + y, 0.5f + z, 1.0f, 0.0f, 0.0f, // top-left
-                        0.5f + x, -0.5f + y, 0.5f + z, 1.0f, 0.0f, 0.0f,// bottom-left
+                    };
+                    break;
+                case LEFT:
+                    verts = new float[]{
+                            // Left face
+                            -0.5f + x, 0.35f + y, 0.5f + z, -1.0f, 0.0f, 0.0f, // top-right
+                            -0.5f + x, 0.35f + y, -0.5f + z, -1.0f, 0.0f, 0.0f, // top-left
+                            -0.5f + x, -0.5f + y, -0.5f + z, -1.0f, 0.0f, 0.0f, // bottom-left
+                            -0.5f + x, -0.5f + y, -0.5f + z, -1.0f, 0.0f, 0.0f,// bottom-left
+                            -0.5f + x, -0.5f + y, 0.5f + z, -1.0f, 0.0f, 0.0f,// bottom-right
+                            -0.5f + x, 0.35f + y, 0.5f + z, -1.0f, 0.0f, 0.0f, // top-right
 
-                };
-                break;
-            case BACK:
-                verts = new float[]{
-                        -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f,  // Bottom-left
-                        0.5f + x, 0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f, // top-right
-                        0.5f + x, -0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f,// bottom-right
-                        0.5f + x, 0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f,// top-right
-                        -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f, // bottom-left
-                        -0.5f + x, 0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f, // top-left
+                    };
+                    break;
+                case RIGHT:
+                    verts = new float[]{
+                            0.5f + x, 0.35f + y, 0.5f + z, 1.0f, 0.0f, 0.0f, // top-left
+                            0.5f + x, -0.5f + y, -0.5f + z, 1.0f, 0.0f, 0.0f,  // bottom-right
+                            0.5f + x, 0.35f + y, -0.5f + z, 1.0f, 0.0f, 0.0f, // top-right
+                            0.5f + x, -0.5f + y, -0.5f + z, 1.0f, 0.0f, 0.0f, // bottom-right
+                            0.5f + x, 0.35f + y, 0.5f + z, 1.0f, 0.0f, 0.0f, // top-left
+                            0.5f + x, -0.5f + y, 0.5f + z, 1.0f, 0.0f, 0.0f,// bottom-left
 
-                };
-                break;
-            case BOTTOM:
-                verts = new float[]{
-                        -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, -1.0f, 0.0f,   // top-right
-                        0.5f + x, -0.5f + y, -0.5f + z, 0.0f, -1.0f, 0.0f, // top-left
-                        0.5f + x, -0.5f + y, 0.5f + z, 0.0f, -1.0f, 0.0f, // bottom-left
-                        0.5f + x, -0.5f + y, 0.5f + z, 0.0f, -1.0f, 0.0f,// bottom-left
-                        -0.5f + x, -0.5f + y, 0.5f + z, 0.0f, -1.0f, 0.0f, // bottom-right
-                        -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, -1.0f, 0.0f,  // top-right
+                    };
+                    break;
+                case BACK:
+                    verts = new float[]{
+                            -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f,  // Bottom-left
+                            0.5f + x, 0.35f + y, -0.5f + z, 0.0f, 0.0f, -1.0f, // top-right
+                            0.5f + x, -0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f,// bottom-right
+                            0.5f + x, 0.35f + y, -0.5f + z, 0.0f, 0.0f, -1.0f,// top-right
+                            -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f, // bottom-left
+                            -0.5f + x, 0.35f + y, -0.5f + z, 0.0f, 0.0f, -1.0f, // top-left
 
-                };
-                break;
+                    };
+                    break;
+                case BOTTOM:
+                    verts = new float[]{
+                            -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, -1.0f, 0.0f,   // top-right
+                            0.5f + x, -0.5f + y, -0.5f + z, 0.0f, -1.0f, 0.0f, // top-left
+                            0.5f + x, -0.5f + y, 0.5f + z, 0.0f, -1.0f, 0.0f, // bottom-left
+                            0.5f + x, -0.5f + y, 0.5f + z, 0.0f, -1.0f, 0.0f,// bottom-left
+                            -0.5f + x, -0.5f + y, 0.5f + z, 0.0f, -1.0f, 0.0f, // bottom-right
+                            -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, -1.0f, 0.0f,  // top-right
+
+                    };
+                    break;
+            }
+
+        } else {
+
+            switch (faceType) {
+                case FRONT:
+                    verts = new float[]{
+                            // Front face
+                            -0.5f + x, -0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f, // bottom-left
+                            0.5f + x, -0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// bottom-right
+                            0.5f + x, 0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// top-right
+                            0.5f + x, 0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// top-right
+                            -0.5f + x, 0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// top-left
+                            -0.5f + x, -0.5f + y, 0.5f + z, 0.0f, 0.0f, 1.0f,// bottom-left
+
+                    };
+                    break;
+                case LEFT:
+                    verts = new float[]{
+                            // Left face
+                            -0.5f + x, 0.5f + y, 0.5f + z, -1.0f, 0.0f, 0.0f, // top-right
+                            -0.5f + x, 0.5f + y, -0.5f + z, -1.0f, 0.0f, 0.0f, // top-left
+                            -0.5f + x, -0.5f + y, -0.5f + z, -1.0f, 0.0f, 0.0f, // bottom-left
+                            -0.5f + x, -0.5f + y, -0.5f + z, -1.0f, 0.0f, 0.0f,// bottom-left
+                            -0.5f + x, -0.5f + y, 0.5f + z, -1.0f, 0.0f, 0.0f,// bottom-right
+                            -0.5f + x, 0.5f + y, 0.5f + z, -1.0f, 0.0f, 0.0f, // top-right
+
+                    };
+                    break;
+                case RIGHT:
+                    verts = new float[]{
+                            0.5f + x, 0.5f + y, 0.5f + z, 1.0f, 0.0f, 0.0f, // top-left
+                            0.5f + x, -0.5f + y, -0.5f + z, 1.0f, 0.0f, 0.0f,  // bottom-right
+                            0.5f + x, 0.5f + y, -0.5f + z, 1.0f, 0.0f, 0.0f, // top-right
+                            0.5f + x, -0.5f + y, -0.5f + z, 1.0f, 0.0f, 0.0f, // bottom-right
+                            0.5f + x, 0.5f + y, 0.5f + z, 1.0f, 0.0f, 0.0f, // top-left
+                            0.5f + x, -0.5f + y, 0.5f + z, 1.0f, 0.0f, 0.0f,// bottom-left
+
+                    };
+                    break;
+                case BACK:
+                    verts = new float[]{
+                            -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f,  // Bottom-left
+                            0.5f + x, 0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f, // top-right
+                            0.5f + x, -0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f,// bottom-right
+                            0.5f + x, 0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f,// top-right
+                            -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f, // bottom-left
+                            -0.5f + x, 0.5f + y, -0.5f + z, 0.0f, 0.0f, -1.0f, // top-left
+
+                    };
+                    break;
+                case BOTTOM:
+                    verts = new float[]{
+                            -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, -1.0f, 0.0f,   // top-right
+                            0.5f + x, -0.5f + y, -0.5f + z, 0.0f, -1.0f, 0.0f, // top-left
+                            0.5f + x, -0.5f + y, 0.5f + z, 0.0f, -1.0f, 0.0f, // bottom-left
+                            0.5f + x, -0.5f + y, 0.5f + z, 0.0f, -1.0f, 0.0f,// bottom-left
+                            -0.5f + x, -0.5f + y, 0.5f + z, 0.0f, -1.0f, 0.0f, // bottom-right
+                            -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, -1.0f, 0.0f,  // top-right
+
+                    };
+                    break;
+            }
         }
 
-        BlockType blockType = chunkData.get(x - (int) (World.chunkSizeX * position.x)).get(z - (int) (World.chunkSizeZ * position.z)).get(y);
+
         Float[] vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), faceType));
 
         Collections.addAll(verticesList, vertsList);
@@ -241,6 +329,7 @@ public class Chunk {
         SNOW,
         SIDESNOW,
         BEDROCK,
+        SAND,
     }
 
     public class TextureCoords {
@@ -272,6 +361,7 @@ public class Chunk {
     }
 
 
+
     public Chunk(Vector3f position) {
 
         blockTextures.put(BlockType.GRASS, new TextureCoords(0, 0));
@@ -280,10 +370,11 @@ public class Chunk {
         blockTextures.put(BlockType.SIDEDIRT, new TextureCoords(3, 0));
         blockTextures.put(BlockType.PLANKS, new TextureCoords(4, 0));
         blockTextures.put(BlockType.COBBLESTONE, new TextureCoords(0, 1));
-        blockTextures.put(BlockType.WATER, new TextureCoords(15, 13));
+        blockTextures.put(BlockType.WATER, new TextureCoords(14, 12));
         blockTextures.put(BlockType.SNOW, new TextureCoords(2, 4));
         blockTextures.put(BlockType.SIDESNOW, new TextureCoords(4, 4));
         blockTextures.put(BlockType.BEDROCK, new TextureCoords(1, 1));
+        blockTextures.put(BlockType.SAND, new TextureCoords(2, 1));
 
         noise = new FastNoiseLite();
         noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
@@ -316,20 +407,37 @@ public class Chunk {
                 for (int y = 0; y < World.chunkSizeY; y++) {
 
                     int noiseY = getNoiseY(x, y, z);
-                    noiseArray[x][y][z] = noiseY;
+                    int adjustedY = noiseY + y;
 
 
-
-                    if (noiseY + y < 64) {
-                        yList.set(noiseY + y, BlockType.STONE);
+                    if (adjustedY < 64) {
+                        yList.set(adjustedY, BlockType.STONE);
                         yList.set(y, BlockType.STONE);
-                    } else if (y == World.chunkSizeY - 1 && noiseY + y < 78) {
-                        yList.set(noiseY + y, BlockType.SIDEDIRT);
+
+                    } else if (y == World.chunkSizeY - 1 && adjustedY < 78) {
+                        yList.set(adjustedY, BlockType.SIDEDIRT);
                     } else if (y == World.chunkSizeY - 1) {
-                        yList.set(noiseY + y, BlockType.SIDESNOW);
+                        yList.set(adjustedY, BlockType.SIDESNOW);
                     } else {
-                        yList.set(noiseY + y, BlockType.DIRT);
+                        yList.set(adjustedY, BlockType.DIRT);
                     }
+
+                    // water
+                    if(noiseY < 5 && adjustedY > 62) {
+                        yList.set(adjustedY, BlockType.SAND);
+                        yList.set(adjustedY-1, BlockType.SAND);
+                        if(noiseY < 4){ // Fill with water
+                            for(int i = 0; i < 5-noiseY; i++){
+                                yList.set(adjustedY+i, BlockType.WATER);
+                            }
+
+                        }
+                    }
+
+                    // dumb but whatever
+                    yList.set(0, BlockType.BEDROCK);
+                    yList.set(1, BlockType.BEDROCK);
+                    yList.set(2, BlockType.BEDROCK);
 
                 }
             }
@@ -410,6 +518,7 @@ public class Chunk {
             }
 
          */
+
         for (int x = 0; x < chunkData.size(); x++) {
             int xPos = x + (int) (World.chunkSizeX * position.x);
             for (int z = 0; z < chunkData.get(0).size(); z++) {
@@ -417,30 +526,28 @@ public class Chunk {
                 List<BlockType> column = chunkData.get(x).get(z);
                 for (int y = 0; y < column.size(); y++) {
 
+                    boolean notWater = column.get(y) != BlockType.WATER;
 
                     // there are probably uncessary checks here and i somehow got caves under mountains without it being intended.
                     if (column.get(y) != BlockType.AIR) {
-
-                        if (z == 0 || (z < World.chunkSizeZ && chunkData.get(x).get(z - 1).get(y) == BlockType.AIR))
+                        if (z == 0 || (chunkData.get(x).get(z - 1).get(y) == BlockType.AIR || (chunkData.get(x).get(z - 1).get(y) == BlockType.WATER && notWater)))
                             generateFace(xPos, y, zPos, FaceType.BACK);
 
-                        if (z == World.chunkSizeZ - 1 || (z < World.chunkSizeZ - 1 && chunkData.get(x).get(z + 1).get(y) == BlockType.AIR))
+                        if (z == World.chunkSizeZ - 1 || chunkData.get(x).get(z + 1).get(y) == BlockType.AIR || (chunkData.get(x).get(z + 1).get(y) == BlockType.WATER && notWater))
                             generateFace(xPos, y, zPos, FaceType.FRONT);
 
-                        if (x == 0 || (x < World.chunkSizeX && chunkData.get(x - 1).get(z).get(y) == BlockType.AIR))
+                        if (x == 0 || chunkData.get(x - 1).get(z).get(y) == BlockType.AIR || (chunkData.get(x - 1).get(z).get(y) == BlockType.WATER && notWater))
                             generateFace(xPos, y, zPos, FaceType.LEFT);
 
-                        if (x == World.chunkSizeX - 1 || (x < World.chunkSizeX - 1 && chunkData.get(x + 1).get(z).get(y) == BlockType.AIR))
+                        if (x == World.chunkSizeX - 1 || chunkData.get(x + 1).get(z).get(y) == BlockType.AIR || (chunkData.get(x + 1).get(z).get(y) == BlockType.WATER && notWater))
                             generateFace(xPos, y, zPos, FaceType.RIGHT);
 
-                        if ((y == 0 || y < World.chunkSizeY  && column.get(y-1) == BlockType.AIR))
+                        if ((y == 0 || column.get(y-1) == BlockType.AIR ))
                             generateFace(xPos, y, zPos, FaceType.BOTTOM);
 
                         // only render top if above is air
-                        if (y == column.size() || column.get(y+1) == BlockType.AIR)
+                        if ((y == column.size() || column.get(y+1) == BlockType.AIR) || (column.get(y+1) == BlockType.WATER && notWater))
                             generateTopFace(xPos, y, zPos);
-
-
                     }
                 }
             }

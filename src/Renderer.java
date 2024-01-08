@@ -51,6 +51,8 @@ public class Renderer {
         defaultShader = new ShaderCompiler("src/resources/shaders/default_vertex.glsl", "src/resources/shaders/default_fragment.glsl");
         skyboxShader = new ShaderCompiler("src/resources/shaders/skybox_vertex.glsl", "src/resources/shaders/skybox_fragment.glsl");
         shadowShader = new ShaderCompiler("src/resources/shaders/shadow_vertex.glsl", "src/resources/shaders/shadow_fragment.glsl");
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
@@ -156,6 +158,13 @@ public class Renderer {
         }
 
          */
+
+        if(InputManager.keyDown(GLFW_KEY_F1)){
+            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        }
+        if(InputManager.keyDown(GLFW_KEY_F2)){
+            glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        }
 
         Matrix4f lightView = new Matrix4f().lookAt(lightPos, new Vector3f(World.worldSizeX*World.chunkSizeX, 74.0f,  World.worldSizeX*World.chunkSizeZ), new Vector3f(0.0f, 1.0f,  0.0f));
         Matrix4f lightSpaceMatrix = lightProjection.mul(lightView, new Matrix4f());

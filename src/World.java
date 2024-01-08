@@ -2,18 +2,15 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
-import java.lang.reflect.Array;
+
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Objects;
 
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.concurrent.Future;
+
 
 
 public class World {
@@ -33,8 +30,8 @@ public class World {
 
     static int worldSizeY = 128;
 
-    static int worldSizeX = 12;
-    static int worldSizeZ = 12;
+    static int worldSizeX = 8;
+    static int worldSizeZ = 8;
     private int  ready = 0; // chunk generation delay, bad name ik
 
     private Vector3f plyPos;
@@ -97,13 +94,12 @@ public class World {
 
                     Vector3f chunkPosition = new Vector3f((chunkWorld.x)-x, 0, (chunkWorld.z)-z);
                     if (!isChunkAtPosition(chunkPosition) && new Vector2f(chunkPosition.x, chunkPosition.z).distance(chunkWorld.x, chunkWorld.z) <= worldSizeX / 1.5 && ready <= 0) {
-                        ready = 550;
+                        ready = 600;
                         synchronized (this) {
                             executor.submit(() -> {
                                 Chunk chunk = new Chunk(chunkPosition);
                                 chunkQueue.offer(chunk); // Add to queue
                             });
-
                         }
 
                     }
@@ -182,9 +178,10 @@ public class World {
                 int blockX = blockCoords.x;
                 int blockY = blockCoords.y;
                 int blockZ = blockCoords.z;
+                Chunk.BlockType block  = chunk.chunkData.get(blockX).get(blockZ).get(blockY);
                     //System.out.println("Checking block at: " + chunk.chunkData.get(blockX).get(blockZ).get(blockY));
 
-                if(chunk.chunkData.get(blockX).get(blockZ).get(blockY) != Chunk.BlockType.AIR){
+                if(block != Chunk.BlockType.AIR && block != Chunk.BlockType.BEDROCK ){
                     //System.out.println("removing block at: " + getBlockCoordWithinChunk(position));
                     chunk.chunkData.get(blockX).get(blockZ).set(blockY, Chunk.BlockType.AIR);
                     chunk.update();
