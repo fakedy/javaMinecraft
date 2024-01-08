@@ -13,6 +13,8 @@ public class Chunk {
     ArrayList<ArrayList<ArrayList<BlockType>>> chunkData = new ArrayList<>();
     Map<BlockType, TextureCoords> blockTextures = new HashMap<>();
 
+    private int[][][] noiseArray = new int[World.chunkSizeX][World.chunkSizeY][World.chunkSizeZ];
+
     public int VAO;
     public int VBO;
     public Vector3f position;
@@ -224,8 +226,6 @@ public class Chunk {
 
 
 
-
-
     ArrayList<Float> verticesList = new ArrayList<>();
 
     public enum BlockType {
@@ -254,10 +254,6 @@ public class Chunk {
         }
 
     }
-
-
-
-
 
     // Gather noise data
 
@@ -317,6 +313,7 @@ public class Chunk {
                 for (int y = 0; y < World.chunkSizeY; y++) {
 
                     int noiseY = getNoiseY(x, y, z);
+                    noiseArray[x][y][z] = getNoiseY(x, y, z);
 
                     if (noiseY + y < 64) {
                         zList.set(y + noiseY, BlockType.STONE);
@@ -367,17 +364,17 @@ public class Chunk {
     private void generateData() {
 
         for (int x = 0; x < World.chunkSizeX; x++) {
+            int xPos = x + (int) (World.chunkSizeX * position.x);
             for (int z = 0; z < World.chunkSizeZ; z++) {
+                int zPos = z + (int) (World.chunkSizeZ * position.z);
+                List<BlockType> column = chunkData.get(x).get(z);
                 for (int y = 0; y < World.chunkSizeY; y++) {
 
-                    int height = getNoiseY(x, y, z);
-                    int xPos = x + (int) (World.chunkSizeX * position.x);
+                    int height = noiseArray[x][y][z];
                     int yPos = y + height;
-                    int zPos = z + (int) (World.chunkSizeZ * position.z);
+
 
                     if (chunkData.get(x).get(z).get(yPos) != BlockType.AIR) {
-
-
 
                         if (z == 0 || (z < World.chunkSizeZ && chunkData.get(x).get(z - 1).get(yPos) == BlockType.AIR))
                             generateFace(xPos, yPos, zPos, FaceType.BACK);
@@ -388,14 +385,14 @@ public class Chunk {
                         if (x == 0 || (x < World.chunkSizeX && chunkData.get(x - 1).get(z).get(yPos) == BlockType.AIR))
                             generateFace(xPos, yPos, zPos, FaceType.LEFT);
 
-                        if (x == World.chunkSizeX - 1 || (x < World.chunkSizeX - 1 && chunkData.get(x + 1).get(z).get(y + height) == BlockType.AIR))
+                        if (x == World.chunkSizeX - 1 || (x < World.chunkSizeX - 1 && chunkData.get(x + 1).get(z).get(yPos) == BlockType.AIR))
                             generateFace(xPos, yPos, zPos, FaceType.RIGHT);
 
-                        if (y + height == height || (yPos < World.chunkSizeY + height && chunkData.get(x).get(z).get(yPos-1) == BlockType.AIR))
+                        if (yPos == height || (yPos < World.chunkSizeY + height && column.get(yPos-1) == BlockType.AIR))
                             generateFace(xPos, yPos, zPos, FaceType.BOTTOM);
 
                         // only render top if above is air
-                        if (y + height == World.chunkSizeY - 1 + height || (yPos < World.chunkSizeY - 1 + height && chunkData.get(x).get(z).get(yPos+1) == BlockType.AIR))
+                        if (yPos == World.chunkSizeY - 1 + height || (yPos < World.chunkSizeY - 1 + height && column.get(yPos+1) == BlockType.AIR))
                             generateTopFace(xPos, yPos, zPos);
 
 
@@ -412,19 +409,15 @@ public class Chunk {
 
 
         public void update() {
-
             destroyMesh();
             generateData();
             generateMesh();
         }
 
         public void destroyMesh () {
-
             GL33.glDeleteVertexArrays(VAO);
             GL33.glDeleteBuffers(VBO);
             verticesList.clear();
 
         }
-
-
     }
