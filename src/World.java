@@ -27,14 +27,15 @@ public class World {
 
     // This is where we will create our world
 
-    static int chunkSizeX = 16;
-    static int chunkSizeZ = 16;
+    static int chunkSizeX = 32;
+    static int chunkSizeZ = 32;
     static int chunkSizeY = 64;
 
     static int worldSizeY = 128;
 
-    static int worldSizeX = 8;
-    static int worldSizeZ = 8;
+    static int worldSizeX = 12;
+    static int worldSizeZ = 12;
+    private int  ready = 0; // chunk generation delay, bad name ik
 
     private Vector3f plyPos;
 
@@ -67,11 +68,12 @@ public class World {
 
         processGeneratedChunks();
 
-
         Renderer.renderObjects = chunks;
         Skybox sky = new Skybox();
         Renderer.skybox = sky;
     }
+
+
 
 
     public void updateWorld(){
@@ -85,7 +87,7 @@ public class World {
         while(iterator.hasNext()){
             Chunk chunk = iterator.next();
             Vector2f chunkV2 = new Vector2f(chunk.position.x, chunk.position.z);
-            if(chunkV2.distance(chunkWorld.x, chunkWorld.z) > worldSizeX/1.5){
+            if(chunkV2.distance(chunkWorld.x, chunkWorld.z) > worldSizeX/1.2){
                 chunk.destroyMesh();
                 iterator.remove();
             }
@@ -96,20 +98,21 @@ public class World {
                 for (int z = -worldSizeZ/2; z < worldSizeZ/2; z++){
 
                     Vector3f chunkPosition = new Vector3f((chunkWorld.x)-x, 0, (chunkWorld.z)-z);
-                    if (!isChunkAtPosition(chunkPosition) && new Vector2f(chunkPosition.x, chunkPosition.z).distance(chunkWorld.x, chunkWorld.z) <= worldSizeX / 1.5) {
+                    if (!isChunkAtPosition(chunkPosition) && new Vector2f(chunkPosition.x, chunkPosition.z).distance(chunkWorld.x, chunkWorld.z) <= worldSizeX / 1.5 && ready <= 0) {
+                        ready = 550;
+                        synchronized (this) {
+                            executor.submit(() -> {
+                                Chunk chunk = new Chunk(chunkPosition);
+                                chunkQueue.offer(chunk); // Add to queue
+                            });
 
-                        executor.submit(() -> {
-                            Chunk chunk = new Chunk(chunkPosition);
-                            chunkQueue.offer(chunk); // Add to queue
-
-                        });
+                        }
 
                     }
+                    ready--;
                 }
 
             }
-
-
 
         processGeneratedChunks();
 
@@ -137,6 +140,14 @@ public class World {
                 return true;
             }
         }
+
+        // Check in the chunkQueue
+        for (Chunk chunk : chunkQueue) {
+            if (chunk.position.equals(position)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -183,9 +194,6 @@ public class World {
                     chunk.update();
                     return true;
                 }
-
-
-
             }
         }
         return false;  // or throw an exception or handle this case as you see fit

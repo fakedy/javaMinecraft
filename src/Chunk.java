@@ -10,6 +10,7 @@ public class Chunk {
 
 
     public float[] verts;
+    public int vertsAmount;
     ArrayList<ArrayList<ArrayList<BlockType>>> chunkData = new ArrayList<>();
     Map<BlockType, TextureCoords> blockTextures = new HashMap<>();
 
@@ -359,6 +360,9 @@ public class Chunk {
         // color attribute
         GL33.glVertexAttribPointer(2, 2, GL33.GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
         glEnableVertexAttribArray(2);
+
+        vertsAmount = verts.length;
+        verts = null;
     }
 
     private void generateData() {
@@ -400,9 +404,11 @@ public class Chunk {
                 }
             }
 
+
             verts = new float[verticesList.size()];
-            for (int i = 0; i < verticesList.size(); i++) {
-                verts[i] = verticesList.get(i);
+            int i = 0;
+            for (Float f : verticesList) {
+                verts[i++] = f; // Handling null values, replace with 0.0f
             }
         }
     }
@@ -413,6 +419,8 @@ public class Chunk {
             generateData();
             generateMesh();
         }
+
+
 
         public void destroyMesh () {
             GL33.glDeleteVertexArrays(VAO);
