@@ -43,7 +43,7 @@ public class Renderer {
 
 
         glEnable(GL_DEPTH_TEST);
-        //glEnable(GL_FRAMEBUFFER_SRGB);
+        glEnable(GL_FRAMEBUFFER_SRGB);
         test = TextureLoader.loadTexture("src/resources/textures/terrain.png");
 
 
@@ -140,7 +140,8 @@ public class Renderer {
         Matrix4f lightProjection = new Matrix4f().ortho(-World.worldSizeX*World.chunkSizeX, World.worldSizeX*World.chunkSizeX, -World.worldSizeX*World.chunkSizeX, World.worldSizeX*World.chunkSizeX, near_plane, far_plane);
 
 
-        //lightPos = camera.position;
+        lightPos = camera.position;
+        /*
         if(InputManager.keyDown(GLFW_KEY_UP)){
             lightPos.add(new Vector3f(0.1f,0.0f,0.0f));
         }
@@ -153,6 +154,8 @@ public class Renderer {
         if(InputManager.keyDown(GLFW_KEY_LEFT)){
             lightPos.add(new Vector3f(0.0f,0.0f,-0.1f));
         }
+
+         */
 
         Matrix4f lightView = new Matrix4f().lookAt(lightPos, new Vector3f(World.worldSizeX*World.chunkSizeX, 74.0f,  World.worldSizeX*World.chunkSizeZ), new Vector3f(0.0f, 1.0f,  0.0f));
         Matrix4f lightSpaceMatrix = lightProjection.mul(lightView, new Matrix4f());

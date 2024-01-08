@@ -31,9 +31,9 @@ public class TextureLoader {
             GL33.glTexParameteri(GL33.GL_TEXTURE_2D, GL33.GL_TEXTURE_MAG_FILTER, GL33.GL_NEAREST);
             // add cases for different channels
             if(nrChannels.get() == 4){
-                GL33.glTexImage2D(GL33.GL_TEXTURE_2D, 0, GL33.GL_RGBA, width.get(), height.get(), 0, GL33.GL_RGBA, GL33.GL_UNSIGNED_BYTE, data);
+                GL33.glTexImage2D(GL33.GL_TEXTURE_2D, 0, GL33.GL_SRGB_ALPHA, width.get(), height.get(), 0, GL33.GL_RGBA, GL33.GL_UNSIGNED_BYTE, data);
             } else {
-                GL33.glTexImage2D(GL33.GL_TEXTURE_2D, 0, GL33.GL_RGB, width.get(), height.get(), 0, GL33.GL_RGB, GL33.GL_UNSIGNED_BYTE, data);
+                GL33.glTexImage2D(GL33.GL_TEXTURE_2D, 0, GL33.GL_SRGB, width.get(), height.get(), 0, GL33.GL_RGB, GL33.GL_UNSIGNED_BYTE, data);
 
             }
             STBImage.stbi_image_free(data);

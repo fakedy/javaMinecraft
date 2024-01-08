@@ -18,12 +18,12 @@ vec3 normal;
 
 float fragDist = pow((pow((plyPos.x - FragPos.x), 2) + pow((plyPos.y - FragPos.y), 2) + pow((plyPos.z - FragPos.z), 2)), 0.5); // calculates distance between camera and frag position. seems like glsl already have a dist func lol.
 
-vec3 lightDirection = vec3(-0.4f, -1.0f, -0.1f);
+vec3 lightDirection = vec3(-0.5f, -1.0f, -0.5f);
 
 float get_fog_factor() {
 
-    float nearplane = 220.0; // Where the fog starts
-    float farplane =  300.0; // where the max fog is reached
+    float nearplane = 180.0; // Where the fog starts
+    float farplane =  250.0; // where the max fog is reached
 
     float fogmax = 1.0 * farplane;
     float fogmin = 0.5 * farplane;
@@ -54,16 +54,17 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     shadow = 0.0;
 
 
-    return shadow;
+    return 0.0;
+    //return shadow;
 }
 
 void main()
 {
     vec3 color = texture(ourTexture, TexCoord).rgb;
     normal = normalize(Normal);
-    vec3 lightColor = vec3(0.8);
+    vec3 lightColor = vec3(1.0, 0.95, 0.8);
     // ambient
-    vec3 ambient = 0.08 * lightColor;
+    vec3 ambient = 0.2 * lightColor; // indirect light
     // diffuse
     lightDir = normalize(lightPos - FragPos);
     float diff = max(dot(lightDir, normal), 0.0);
@@ -71,9 +72,10 @@ void main()
     // specular
     vec3 viewDir = normalize(plyPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = 0.0;
     vec3 halfwayDir = normalize(lightDir + viewDir);
-    //spec = pow(max(dot(normal, halfwayDir), 0.0), 256.0);
+    float spec = 0.0;
+    float shininess = 256.0;
+    //spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
     vec3 specular = spec * lightColor;
     // calculate shadow
     float shadow = ShadowCalculation(FragPosLightSpace);
@@ -82,5 +84,5 @@ void main()
     //lighting.rgb = pow(lighting, vec3(1.0/gamma));
     float fogFactor = get_fog_factor();
 
-    FragColor = mix(vec4(lighting,1.0f), vec4(vec3(255/255, 255/255, 255/255), 0.0), fogFactor);
+    FragColor = mix(vec4(lighting,1.0f), vec4(lightColor, 0.0), fogFactor);
 }

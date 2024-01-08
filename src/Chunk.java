@@ -306,25 +306,29 @@ public class Chunk {
             chunkData.add(xList);
         }
 
+
+
         // modify blocks
         for (int x = 0; x < World.chunkSizeX; x++) {
             ArrayList<ArrayList<BlockType>> xList = chunkData.get(x);
             for (int z = 0; z < World.chunkSizeZ; z++) {
-                ArrayList<BlockType> zList = xList.get(z);
+                ArrayList<BlockType> yList = xList.get(z);
                 for (int y = 0; y < World.chunkSizeY; y++) {
 
                     int noiseY = getNoiseY(x, y, z);
-                    noiseArray[x][y][z] = getNoiseY(x, y, z);
+                    noiseArray[x][y][z] = noiseY;
+
+
 
                     if (noiseY + y < 64) {
-                        zList.set(y + noiseY, BlockType.STONE);
+                        yList.set(noiseY + y, BlockType.STONE);
+                        yList.set(y, BlockType.STONE);
                     } else if (y == World.chunkSizeY - 1 && noiseY + y < 78) {
-                        zList.set(y + noiseY, BlockType.SIDEDIRT);
+                        yList.set(noiseY + y, BlockType.SIDEDIRT);
                     } else if (y == World.chunkSizeY - 1) {
-                        zList.set(y + noiseY, BlockType.SIDESNOW);
+                        yList.set(noiseY + y, BlockType.SIDESNOW);
                     } else {
-                        zList.set(y + noiseY, BlockType.DIRT);
-
+                        yList.set(noiseY + y, BlockType.DIRT);
                     }
 
                 }
@@ -367,6 +371,7 @@ public class Chunk {
 
     private void generateData() {
 
+        /*
         for (int x = 0; x < World.chunkSizeX; x++) {
             int xPos = x + (int) (World.chunkSizeX * position.x);
             for (int z = 0; z < World.chunkSizeZ; z++) {
@@ -378,7 +383,7 @@ public class Chunk {
                     int yPos = y + height;
 
 
-                    if (chunkData.get(x).get(z).get(yPos) != BlockType.AIR) {
+                    if (column.get(yPos) != BlockType.AIR) {
 
                         if (z == 0 || (z < World.chunkSizeZ && chunkData.get(x).get(z - 1).get(yPos) == BlockType.AIR))
                             generateFace(xPos, yPos, zPos, FaceType.BACK);
@@ -404,14 +409,51 @@ public class Chunk {
                 }
             }
 
+         */
+        for (int x = 0; x < chunkData.size(); x++) {
+            int xPos = x + (int) (World.chunkSizeX * position.x);
+            for (int z = 0; z < chunkData.get(0).size(); z++) {
+                int zPos = z + (int) (World.chunkSizeZ * position.z);
+                List<BlockType> column = chunkData.get(x).get(z);
+                for (int y = 0; y < column.size(); y++) {
+
+
+                    // there are probably uncessary checks here and i somehow got caves under mountains without it being intended.
+                    if (column.get(y) != BlockType.AIR) {
+
+                        if (z == 0 || (z < World.chunkSizeZ && chunkData.get(x).get(z - 1).get(y) == BlockType.AIR))
+                            generateFace(xPos, y, zPos, FaceType.BACK);
+
+                        if (z == World.chunkSizeZ - 1 || (z < World.chunkSizeZ - 1 && chunkData.get(x).get(z + 1).get(y) == BlockType.AIR))
+                            generateFace(xPos, y, zPos, FaceType.FRONT);
+
+                        if (x == 0 || (x < World.chunkSizeX && chunkData.get(x - 1).get(z).get(y) == BlockType.AIR))
+                            generateFace(xPos, y, zPos, FaceType.LEFT);
+
+                        if (x == World.chunkSizeX - 1 || (x < World.chunkSizeX - 1 && chunkData.get(x + 1).get(z).get(y) == BlockType.AIR))
+                            generateFace(xPos, y, zPos, FaceType.RIGHT);
+
+                        if ((y == 0 || y < World.chunkSizeY  && column.get(y-1) == BlockType.AIR))
+                            generateFace(xPos, y, zPos, FaceType.BOTTOM);
+
+                        // only render top if above is air
+                        if (y == column.size() || column.get(y+1) == BlockType.AIR)
+                            generateTopFace(xPos, y, zPos);
+
+
+                    }
+                }
+            }
+
 
             verts = new float[verticesList.size()];
             int i = 0;
             for (Float f : verticesList) {
-                verts[i++] = f; // Handling null values, replace with 0.0f
+                verts[i++] = f;
             }
         }
     }
+
 
 
         public void update() {

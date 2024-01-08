@@ -46,8 +46,6 @@ public class World {
 
     World(){
 
-
-
         for (int x = 0; x < worldSizeX; x++){
             for (int z = 0; z < worldSizeZ; z++){
 
@@ -125,9 +123,7 @@ public class World {
             Chunk chunk = chunkQueue.poll();
             if (chunk != null) {
                 chunk.generateMesh(); // OpenGL operations
-
                 chunks.add(chunk);
-
             }
         }
     }
