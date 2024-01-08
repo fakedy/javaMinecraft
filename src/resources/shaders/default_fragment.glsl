@@ -22,8 +22,8 @@ vec3 lightDirection = vec3(-0.4f, -1.0f, -0.1f);
 
 float get_fog_factor() {
 
-    float nearplane = 120.0; // Where the fog starts
-    float farplane = 200.0; // where the max fog is reached
+    float nearplane = 220.0; // Where the fog starts
+    float farplane =  300.0; // where the max fog is reached
 
     float fogmax = 1.0 * farplane;
     float fogmin = 0.5 * farplane;
@@ -78,8 +78,9 @@ void main()
     // calculate shadow
     float shadow = ShadowCalculation(FragPosLightSpace);
     vec3 lighting = (ambient +    (1.0 - shadow)* (diffuse + specular)) * color;
-    float gamma = 2.2;
-    lighting.rgb = pow(lighting, vec3(1.0/gamma));
+    //float gamma = 2.2;
+    //lighting.rgb = pow(lighting, vec3(1.0/gamma));
+    float fogFactor = get_fog_factor();
 
-    FragColor = vec4(lighting, 1.0);
+    FragColor = mix(vec4(lighting,1.0f), vec4(vec3(255/255, 255/255, 255/255), 0.0), fogFactor);
 }

@@ -3,7 +3,7 @@ import org.joml.Vector3f;
 public class Game {
 
     public static Camera camera;
-    private Player player;
+    public static Player player;
 
     private World world;
 

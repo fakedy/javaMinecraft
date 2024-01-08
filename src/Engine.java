@@ -34,12 +34,13 @@ public class Engine {
             previous = current;
             lag += elapsed;
             Time.setDeltaTime(elapsed / 1000.0);
+            game.update();
 
             while(lag >= MS_PER_UPDATE){
 
                 // update
 
-                game.update();
+                //game.update();
                 lag -= MS_PER_UPDATE;
             }
 

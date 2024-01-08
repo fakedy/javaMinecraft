@@ -8,7 +8,7 @@ public class DepthMap {
 
 
     public int depthMapFBO;
-    public int SHADOW_WIDTH = 4086, SHADOW_HEIGHT = 4086;
+    public int SHADOW_WIDTH = 8172, SHADOW_HEIGHT = 8172;
     public int depthMap;
 
     DepthMap(){
