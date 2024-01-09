@@ -64,7 +64,7 @@ void main()
     normal = normalize(Normal);
     vec3 lightColor = vec3(1.0, 0.95, 0.8);
     // ambient
-    vec3 ambient = 0.2 * lightColor; // indirect light
+    vec3 ambient = 0.1 * lightColor; // indirect light
     // diffuse
     lightDir = normalize(lightPos - FragPos);
     float diff = max(dot(lightDir, normal), 0.0);
@@ -80,6 +80,7 @@ void main()
     // calculate shadow
     float shadow = ShadowCalculation(FragPosLightSpace);
     vec4 lighting = vec4(ambient +    (1.0 - shadow)* (diffuse + specular),1.0) * color;
+    // gamma correction
     //float gamma = 2.2;
     //lighting.rgb = pow(lighting, vec3(1.0/gamma));
     float fogFactor = get_fog_factor();

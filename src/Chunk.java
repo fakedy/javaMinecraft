@@ -1,13 +1,13 @@
 import java.util.*;
 
 import org.joml.Vector3f;
+import org.joml.Vector3i;
 import org.lwjgl.opengl.*;
 
 import static org.lwjgl.opengl.GL46.*;
 
 
 public class Chunk {
-
 
     public float[] opaqueVerts;
 
@@ -24,7 +24,7 @@ public class Chunk {
     public int VAO;
     public int opaqueVBO;
 
-    public Vector3f position;
+    public Vector3i position;
     FastNoiseLite noise;
 
     // Function to combine vertex positions and texture coordinates
@@ -125,9 +125,9 @@ public class Chunk {
 
         float[] verts;
 
-        BlockType blockType = chunkData.get(x - (int) (World.chunkSizeX * position.x)).get(z - (int) (World.chunkSizeZ * position.z)).get(y);
+        BlockType blockType = chunkData.get(x - (World.chunkSizeX * position.x)).get(z - (World.chunkSizeZ * position.z)).get(y);
 
-        if(blockType == BlockType.WATER && chunkData.get(x - (int) (World.chunkSizeX * position.x)).get(z - (int) (World.chunkSizeZ * position.z)).get(y+1) == BlockType.AIR) {
+        if(blockType == BlockType.WATER && chunkData.get(x - (World.chunkSizeX * position.x)).get(z - (World.chunkSizeZ * position.z)).get(y+1) == BlockType.AIR) {
 
             verts = new float[]{
                     -0.5f + x, y + 0.35f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-left
@@ -180,11 +180,11 @@ public class Chunk {
 
     private void generateFace(int x, int y, int z, FaceType faceType){
 
-        BlockType blockType = chunkData.get(x - (int) (World.chunkSizeX * position.x)).get(z - (int) (World.chunkSizeZ * position.z)).get(y);
+        BlockType blockType = chunkData.get(x - (World.chunkSizeX * position.x)).get(z - (World.chunkSizeZ * position.z)).get(y);
 
         float[] verts = new float[36];
 
-        if(blockType == BlockType.WATER && chunkData.get(x - (int) (World.chunkSizeX * position.x)).get(z - (int) (World.chunkSizeZ * position.z)).get(y+1) == BlockType.AIR){ // no reason to have this atm but maybe in future.
+        if(blockType == BlockType.WATER && chunkData.get(x - (World.chunkSizeX * position.x)).get(z - (World.chunkSizeZ * position.z)).get(y+1) == BlockType.AIR){ // no reason to have this atm but maybe in future.
             switch (faceType) {
 
                 case FRONT:
@@ -370,7 +370,10 @@ public class Chunk {
 
 
 
-    public Chunk(Vector3f position) {
+
+    public Chunk(Vector3i position) {
+
+
 
         blockTextures.put(BlockType.GRASS, new TextureCoords(0, 0));
         blockTextures.put(BlockType.STONE, new TextureCoords(1, 0));
@@ -511,9 +514,9 @@ public class Chunk {
     private void faceCull(){
 
         for (int x = 0; x < chunkData.size(); x++) {
-            int xPos = x + (int) (World.chunkSizeX * position.x);
+            int xPos = x + (World.chunkSizeX * position.x);
             for (int z = 0; z < chunkData.get(0).size(); z++) {
-                int zPos = z + (int) (World.chunkSizeZ * position.z);
+                int zPos = z + (World.chunkSizeZ * position.z);
                 List<BlockType> column = chunkData.get(x).get(z);
                 for (int y = 0; y < column.size(); y++) {
 
@@ -561,5 +564,8 @@ public class Chunk {
             glDeleteBuffers(opaqueVBO);
             opaqueVerticesList.clear();
             transVerticesList.clear();
+            opaqueVertsAmount = 0;
+            transVertsAmount = 0;
+
         }
     }

@@ -122,6 +122,7 @@ public class Renderer {
             glBindVertexArray(renderObjects.get(i).VAO);
 
             glEnable(GL_CULL_FACE);
+            glDisable(GL_BLEND);
             glBindBuffer(GL_ARRAY_BUFFER, renderObjects.get(i).opaqueVBO);
             glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).opaqueVertsAmount);
 
@@ -134,6 +135,7 @@ public class Renderer {
             glBindVertexArray(renderObjects.get(i).VAO);
 
             glDisable(GL_CULL_FACE);
+            glEnable(GL_BLEND);
             glDrawArrays(GL_TRIANGLES, renderObjects.get(i).opaqueVertsAmount, renderObjects.get(i).transVertsAmount);
 
         }
@@ -214,6 +216,7 @@ public class Renderer {
 
         skyboxShader.setMat4("view", skyboxViewMatrix);
         skyboxShader.setMat4("projection", projectionMatrix);
+        skyboxShader.setVec3("plyPos", camera.position);
     }
 
 

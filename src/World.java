@@ -1,8 +1,10 @@
 import org.joml.Vector2f;
+import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -24,25 +26,29 @@ public class World {
 
     // This is where we will create our world
 
-    static int chunkSizeX = 64;
-    static int chunkSizeZ = 64;
+    static int chunkSizeX = 32;
+    static int chunkSizeZ = 32;
     static int chunkSizeY = 64;
 
     static int worldSizeY = 256;
 
-    static int worldSizeX = 6;
-    static int worldSizeZ = 6;
-    private int  ready = 0; // chunk generation delay, bad name ik
+    static int worldSizeX = 8;
+    static int worldSizeZ = 8;
+    private int  delay = 0; // chunk generation delay, bad name ik
 
     private Vector3f plyPos;
 
     static ArrayList<Chunk> chunks = new ArrayList<>();
 
+    private ArrayList<Vector2i> chunkPosList = new ArrayList<>();
+
 
     // Let's make dumb and simple start
 
-    World(){
+    World() {
 
+
+        /*
         for (int x = 0; x < worldSizeX; x++){
             for (int z = 0; z < worldSizeZ; z++){
 
@@ -50,7 +56,7 @@ public class World {
                 int finalZ = z;
                 executor.submit(() -> {
                     try {
-                        Chunk chunk = new Chunk(new Vector3f(finalX - (worldSizeX) / 2, 0, finalZ - (worldSizeZ) / 2));
+                        Chunk chunk = new Chunk(new Vector3i(finalX - (worldSizeX) / 2, 0, finalZ - (worldSizeZ) / 2));
                         chunkQueue.offer(chunk); // Add to queue
                     } catch (Exception e){
                         System.err.println("Error occurred while processing chunk: " + e.getMessage());
@@ -62,39 +68,43 @@ public class World {
         }
 
         processGeneratedChunks();
+         */
 
         Renderer.renderObjects = chunks;
         Skybox sky = new Skybox();
         Renderer.skybox = sky;
+
+
     }
-
-
-
 
     public void updateWorld(){
 
         plyPos = Game.player.position;
-        Vector3f chunkWorld = getChunkCoord(plyPos);
+        Vector3i chunkWorld = getChunkCoord(plyPos);
 
         Iterator<Chunk> iterator = chunks.iterator();
-
-
         while(iterator.hasNext()){
             Chunk chunk = iterator.next();
-            Vector2f chunkV2 = new Vector2f(chunk.position.x, chunk.position.z);
-            if(chunkV2.distance(chunkWorld.x, chunkWorld.z) > worldSizeX/1.2){
+            Vector2i chunkPosition = new Vector2i(chunk.position.x, chunk.position.z);
+            if(Math.abs(chunkPosition.x - chunkWorld.x) > worldSizeX-1 || (Math.abs(chunkPosition.y - chunkWorld.z)) > worldSizeX-1){
+                chunkPosListemove(chunkPosition);
+                System.out.println("chunk was removed at: " + chunkPosition);
                 chunk.destroyMesh();
                 iterator.remove();
             }
 
         }
 
-            for (int x = -worldSizeX/2; x < worldSizeX/2; x++){
-                for (int z = -worldSizeZ/2; z < worldSizeZ/2; z++){
 
-                    Vector3f chunkPosition = new Vector3f((chunkWorld.x)-x, 0, (chunkWorld.z)-z);
-                    if (!isChunkAtPosition(chunkPosition) && new Vector2f(chunkPosition.x, chunkPosition.z).distance(chunkWorld.x, chunkWorld.z) <= worldSizeX / 1.5 && ready <= 0) {
-                        ready = 600;
+            for (int x = 0; x < worldSizeX; x++){
+                for (int z = 0; z < worldSizeZ; z++){
+
+                    Vector3i chunkPosition = new Vector3i((x + chunkWorld.x) - (worldSizeX/2), 0, (z + chunkWorld.z) - (worldSizeZ/2));
+
+
+                    if (!chunkPosExists(new Vector2i(chunkPosition.x, chunkPosition.z))) {
+                        chunkPosList.add(new Vector2i(chunkPosition.x, chunkPosition.z));
+                        delay = 500;
                         synchronized (this) {
                             executor.submit(() -> {
                                 Chunk chunk = new Chunk(chunkPosition);
@@ -103,7 +113,7 @@ public class World {
                         }
 
                     }
-                    ready--;
+                    delay--;
                 }
 
             }
@@ -112,42 +122,64 @@ public class World {
 
         }
 
+        boolean chunkPosExists(Vector2i chunkPos){
+            for(Vector2i pos : chunkPosList){
+                if(chunkPos.equals(pos.x,pos.y))
+                    return true;
+            }
+        return false;
+    }
+
+    void chunkPosListemove(Vector2i chunkPos){
+
+        ArrayList<Vector2i> tempList = new ArrayList<>();
+        for(Vector2i pos : chunkPosList){
+            if(chunkPos.equals(pos.x,pos.y)){
+
+            } else {
+                tempList.add(pos);
+            }
+
+        }
+
+        chunkPosList = tempList;
+
+    }
+
     public void processGeneratedChunks() {
         while (!chunkQueue.isEmpty()) {
             Chunk chunk = chunkQueue.poll();
             if (chunk != null) {
                 chunk.generateMesh(); // OpenGL operations
                 chunks.add(chunk);
+                //sortChunks();
             }
+
+        }
+    }
+
+    private void sortChunks() {
+        if (!chunks.isEmpty()) {
+            System.out.println("sorting");
+
+            // Sort chunks based on their distance from the player
+            chunks.sort((chunk1, chunk2) -> {
+                float dist1 = plyPos.distance(chunk1.position.x, chunk1.position.y, chunk1.position.z);
+                float dist2 = plyPos.distance(chunk2.position.x, chunk2.position.y, chunk2.position.z);
+                return Float.compare(dist2, dist1); // Sort in descending order
+            });
         }
     }
 
 
 
-    private boolean isChunkAtPosition(Vector3f position) {
-        for (Chunk chunk : chunks) {
-            if (chunk.position.equals(position)) {
-                return true;
-            }
-        }
-
-        // Check in the chunkQueue
-        for (Chunk chunk : chunkQueue) {
-            if (chunk.position.equals(position)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static Vector3f getChunkCoord(Vector3f pos) {
+    public static Vector3i getChunkCoord(Vector3f pos) {
         int chunkCoordX = (int) Math.floor(pos.x / chunkSizeX);
         //int chunkCoordY = (int) Math.floor(pos.y / chunkSizeY);
         int chunkCoordY = 0;
         int chunkCoordZ = (int) Math.floor(pos.z / chunkSizeZ);
 
-        return new Vector3f(chunkCoordX, chunkCoordY, chunkCoordZ);
+        return new Vector3i(chunkCoordX, chunkCoordY, chunkCoordZ);
     }
 
     public static Vector3i getBlockCoordWithinChunk(Vector3f pos) {
@@ -168,6 +200,9 @@ public class World {
         return new Vector3i(blockCoordX, blockCoordY, blockCoordZ);
     }
 
+
+    static Chunk debug;
+
     public static boolean findChunkByPosition(Vector3f position) {
         for (Chunk chunk : chunks) {
             if (chunk.position.equals(getChunkCoord(new Vector3f(position)))) {
@@ -181,6 +216,15 @@ public class World {
 
                 if(block != Chunk.BlockType.AIR && block != Chunk.BlockType.BEDROCK && block != Chunk.BlockType.WATER ){
                     //System.out.println("removing block at: " + getBlockCoordWithinChunk(position));
+
+                    if(debug != null){
+                        if(!debug.equals(chunk)){
+                            System.out.println("Not same chunk");
+                            debug = chunk;
+                        }
+                    } else {
+                        debug = chunk;
+                    }
                     chunk.chunkData.get(blockX).get(blockZ).set(blockY, Chunk.BlockType.AIR);
                     chunk.update();
                     return true;
