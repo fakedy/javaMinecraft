@@ -27,6 +27,8 @@ public class Chunk {
     public Vector3i position;
     FastNoiseLite noise;
 
+    FastNoiseLite moistNoise;
+
     // Function to combine vertex positions and texture coordinates
     public Float[] combineVertexData(float[] positions, float[] texCoords) {
         Float[] combined = new Float[positions.length+texCoords.length];
@@ -338,6 +340,15 @@ public class Chunk {
         SIDESNOW,
         BEDROCK,
         SAND,
+        LAVA,
+        OBSIDIAN,
+        HELLSTONE,
+    }
+
+    private enum Biomes{
+        GRASSLANDS,
+        ROCKLANDS,
+        SNOWLANDS,
     }
 
     public class TextureCoords {
@@ -367,13 +378,41 @@ public class Chunk {
 
         return (int) Math.floor(result * 2);
     }
+    public int getMoistNoiseY(int x, int y, int z) {
+
+        float frequency = 0.15f;
+        float result = (
+                1 * (moistNoise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency, (z + (World.chunkSizeZ * position.z)) * frequency) + 1))
+                + 0.5f * ((moistNoise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency * 2, (z + (World.chunkSizeZ * position.z)) * frequency * 2) + 1))
+                + 0.25f * ((moistNoise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency * 4, (z + (World.chunkSizeZ * position.z)) * frequency * 4) + 1));
+
+        result = (float) Math.pow(result, 3.24f);
+
+        return (int) Math.floor(result * 2);
+    }
+
+    public int getRidgeNoiseY(int x, int y, int z) {
+
+        float frequency = 0.15f;
+        float result = (
+                1 * (ridgeNoise((x + (World.chunkSizeX * position.x)) * frequency, (z + (World.chunkSizeZ * position.z)) * frequency) + 1))
+                + 0.5f * ((ridgeNoise((x + (World.chunkSizeX * position.x)) * frequency * 2, (z + (World.chunkSizeZ * position.z)) * frequency * 2) + 1))
+                + 0.25f * ((ridgeNoise((x + (World.chunkSizeX * position.x)) * frequency * 4, (z + (World.chunkSizeZ * position.z)) * frequency * 4) + 1));
+
+        result = (float) Math.pow(result, 3.24f);
+
+        return (int) Math.floor(result * 2);
+    }
+
+    private float ridgeNoise(float nx,float ny){
+
+        return (float) (2 * (0.5 - Math.abs(0.5 - noise.GetNoise(nx, ny))));
+    }
 
 
 
 
     public Chunk(Vector3i position) {
-
-
 
         blockTextures.put(BlockType.GRASS, new TextureCoords(0, 0));
         blockTextures.put(BlockType.STONE, new TextureCoords(1, 0));
@@ -386,9 +425,15 @@ public class Chunk {
         blockTextures.put(BlockType.SIDESNOW, new TextureCoords(4, 4));
         blockTextures.put(BlockType.BEDROCK, new TextureCoords(1, 1));
         blockTextures.put(BlockType.SAND, new TextureCoords(2, 1));
+        blockTextures.put(BlockType.LAVA, new TextureCoords(15, 15));
+        blockTextures.put(BlockType.OBSIDIAN, new TextureCoords(5, 2));
+        blockTextures.put(BlockType.HELLSTONE, new TextureCoords(7, 6));
 
         noise = new FastNoiseLite();
         noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
+
+        moistNoise = new FastNoiseLite();
+        moistNoise.SetSeed(234234);
 
 
         this.position = position;
@@ -410,39 +455,87 @@ public class Chunk {
 
 
 
+
+
         // modify blocks
         for (int x = 0; x < World.chunkSizeX; x++) {
             ArrayList<ArrayList<BlockType>> xList = chunkData.get(x);
             for (int z = 0; z < World.chunkSizeZ; z++) {
                 ArrayList<BlockType> yList = xList.get(z);
+                int noiseY = getNoiseY(x, 0, z);
+                int ridgeNoiseY = getRidgeNoiseY(x, 0, z);
+                int moistNoiseY = getMoistNoiseY(x,0,z);
                 for (int y = 0; y < World.chunkSizeY; y++) {
 
-                    int noiseY = getNoiseY(x, y, z);
                     int adjustedY = noiseY + y;
 
+                    switch(getBiome(moistNoiseY)){
 
-                    if (adjustedY < 64) {
-                        yList.set(adjustedY, BlockType.STONE);
-                        yList.set(y, BlockType.STONE);
+                        case GRASSLANDS:
 
-                    } else if (y == World.chunkSizeY - 1 && adjustedY < 78) {
-                        yList.set(adjustedY, BlockType.SIDEDIRT);
-                    } else if (y == World.chunkSizeY - 1) {
-                        yList.set(adjustedY, BlockType.SIDESNOW);
-                    } else {
-                        yList.set(adjustedY, BlockType.DIRT);
-                    }
+                            if (adjustedY < 64) {
+                                yList.set(adjustedY, BlockType.STONE);
+                                yList.set(y, BlockType.STONE);
 
-                    // water
-                    if(noiseY < 5 && adjustedY > 62) {
-                        yList.set(adjustedY, BlockType.SAND);
-                        yList.set(adjustedY-1, BlockType.SAND);
-                        if(noiseY < 4){ // Fill with water
-                            for(int i = 0; i < 5-noiseY; i++){
-                                yList.set(adjustedY+i, BlockType.WATER);
+                            } else if (y == World.chunkSizeY - 1 && adjustedY < 78) {
+                                yList.set(adjustedY, BlockType.SIDEDIRT);
+                            } else if (y == World.chunkSizeY - 1) {
+                                yList.set(adjustedY, BlockType.SIDESNOW);
+                            } else {
+                                yList.set(adjustedY, BlockType.DIRT);
                             }
 
-                        }
+                            // water
+                            if(noiseY < 5 && adjustedY > 62) {
+                                yList.set(adjustedY, BlockType.SAND);
+                                yList.set(adjustedY-1, BlockType.SAND);
+                                if(noiseY < 4){ // Fill with water
+                                    for(int i = 0; i < 5-noiseY; i++){
+                                        yList.set(adjustedY+i, BlockType.WATER);
+                                    }
+
+                                }
+                            }
+                            break;
+
+                        case ROCKLANDS:
+
+                            int noise = ridgeNoiseY + y;
+                            if(moistNoiseY > 10  && moistNoiseY  < 30){
+                                noise = (adjustedY+noise)/2;
+                            } else {
+                                noise = ridgeNoiseY + y;
+                            }
+
+                            if (noise < 64) {
+                                yList.set(noise, BlockType.LAVA);
+                                yList.set(y, BlockType.LAVA);
+
+                            } else if (y == World.chunkSizeY - 1 && adjustedY < 78) {
+                                yList.set(noise, BlockType.HELLSTONE);
+                            } else if (y == World.chunkSizeY - 1) {
+                                yList.set(noise, BlockType.OBSIDIAN);
+                            } else {
+                                yList.set(noise, BlockType.OBSIDIAN);
+                            }
+                            // water
+                            if(noise < 5 && noise > 62) {
+                                yList.set(noise, BlockType.OBSIDIAN);
+                                yList.set(noise-1, BlockType.OBSIDIAN);
+                                if(noise < 4){ // Fill with water
+                                    for(int i = 0; i < 5-noise; i++){
+                                        yList.set(noise+i, BlockType.LAVA);
+                                    }
+
+                                }
+                            }
+
+                            break;
+
+
+                        case SNOWLANDS:
+                            break;
+
                     }
 
                     // dumb but whatever
@@ -458,6 +551,14 @@ public class Chunk {
         generateData();
 
 
+    }
+
+    private Biomes getBiome(int noise){
+
+        if(noise > 20)
+            return Biomes.ROCKLANDS;
+
+        return Biomes.GRASSLANDS;
     }
 
 
