@@ -5,7 +5,7 @@ import org.joml.Vector3f;
 import org.lwjgl.opengl.*;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL46.*;
 
 import java.util.ArrayList;
 
@@ -89,6 +89,11 @@ public class Renderer {
             glViewport(0, 0, window.WINDOW_WIDTH, window.WINDOW_HEIGHT); // not working
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+
+            configureShaderAndMatricesSKybox();
+            renderSkybox();
+
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, test);
             glActiveTexture(GL_TEXTURE1);
@@ -98,8 +103,7 @@ public class Renderer {
             configureShaderAndMatrices(defaultShader);
 
             renderScene();
-            configureShaderAndMatricesSKybox();
-            renderSkybox();
+
 
 
             glfwSwapBuffers(window.windowHandle); // swap the color buffers
@@ -116,7 +120,22 @@ public class Renderer {
         for (int i = 0; i < renderObjects.size(); i++){
 
             glBindVertexArray(renderObjects.get(i).VAO);
-            glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).vertsAmount);
+
+            glEnable(GL_CULL_FACE);
+            glBindBuffer(GL_ARRAY_BUFFER, renderObjects.get(i).opaqueVBO);
+            glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).opaqueVertsAmount);
+
+
+        }
+
+        //glBindTexture(GL_TEXTURE_2D, 1);
+        for (int i = 0; i < renderObjects.size(); i++){
+
+            glBindVertexArray(renderObjects.get(i).VAO);
+
+            glDisable(GL_CULL_FACE);
+            glDrawArrays(GL_TRIANGLES, renderObjects.get(i).opaqueVertsAmount, renderObjects.get(i).transVertsAmount);
+
         }
 
 
@@ -126,7 +145,7 @@ public class Renderer {
         glDepthFunc(GL_LEQUAL);
         glBindVertexArray(skybox.VAO);
         glBindTexture(GL_TEXTURE_CUBE_MAP, 2);
-        glDrawArrays(GL_TRIANGLES, 0, skybox.skyboxVertices.length);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
         glDepthFunc(GL_LESS);
 
     }

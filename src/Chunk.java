@@ -3,19 +3,27 @@ import java.util.*;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.*;
 
-import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL46.*;
 
 
 public class Chunk {
 
 
-    public float[] verts;
-    public int vertsAmount;
+    public float[] opaqueVerts;
+
+    public float[] transVerts;
+
+    public int opaqueVertsAmount = 0;
+    public int transVertsAmount = 0;
+
+    ArrayList<Float> opaqueVerticesList = new ArrayList<>();
+    ArrayList<Float> transVerticesList = new ArrayList<>();
     ArrayList<ArrayList<ArrayList<BlockType>>> chunkData = new ArrayList<>();
     Map<BlockType, TextureCoords> blockTextures = new HashMap<>();
 
     public int VAO;
-    public int VBO;
+    public int opaqueVBO;
+
     public Vector3f position;
     FastNoiseLite noise;
 
@@ -35,15 +43,6 @@ public class Chunk {
         }
         return combined;
     }
-
-    float[] defaultTexCoords = {
-            0.0f, 1.0f,
-            1.0f, 0.0f,
-            1.0f, 1.0f,
-            1.0f, 0.0f,
-            0.0f, 1.0f,
-            0.0f, 0.0f
-    };
 
     public enum FaceType {
         TOP, LEFT, FRONT, BACK, BOTTOM, RIGHT
@@ -167,9 +166,13 @@ public class Chunk {
         } else {
             vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP));
         }
-
-        Collections.addAll(verticesList, vertsList);
-
+        if(blockType == BlockType.WATER){
+            Collections.addAll(transVerticesList, vertsList);
+            transVertsAmount += 6;
+        } else {
+            Collections.addAll(opaqueVerticesList, vertsList);
+            opaqueVertsAmount += 6;
+        }
 
     }
 
@@ -309,13 +312,18 @@ public class Chunk {
 
         Float[] vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), faceType));
 
-        Collections.addAll(verticesList, vertsList);
+        if(blockType == BlockType.WATER){ // disabled water because why would we need water sides atm aaaaaaaaaaaaaaaaaaaa
+            //Collections.addAll(transVerticesList, vertsList);
+            //transVertsAmount += 6;
+        } else {
+            Collections.addAll(opaqueVerticesList, vertsList);
+            opaqueVertsAmount += 6;
+        }
 
     }
 
 
 
-    ArrayList<Float> verticesList = new ArrayList<>();
 
     public enum BlockType {
         AIR,
@@ -452,72 +460,55 @@ public class Chunk {
 
     public void generateMesh() {
 
-        VAO = GL33.glGenVertexArrays();
-        VBO = GL33.glGenBuffers();
 
-        // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+        VAO = glGenVertexArrays();
         glBindVertexArray(VAO);
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, verts, GL_STATIC_DRAW);
+        opaqueVBO = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, opaqueVBO);
+        glBufferData(GL_ARRAY_BUFFER, opaqueVerts, GL_DYNAMIC_DRAW);
+
+        GL46.glVertexAttribBinding(0,0);
 
         // position attribute
-        GL33.glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 0);
-
+        glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 0);
         glEnableVertexAttribArray(0);
 
         // normal attribute
-        GL33.glVertexAttribPointer(1, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
+        glVertexAttribPointer(1, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
         glEnableVertexAttribArray(1);
         // color attribute
-        GL33.glVertexAttribPointer(2, 2, GL33.GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
+        glVertexAttribPointer(2, 2, GL33.GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
         glEnableVertexAttribArray(2);
 
-        vertsAmount = verts.length;
-        verts = null;
+
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        opaqueVerts = null;
+        transVerts = null;
     }
 
     private void generateData() {
 
-        /*
-        for (int x = 0; x < World.chunkSizeX; x++) {
-            int xPos = x + (int) (World.chunkSizeX * position.x);
-            for (int z = 0; z < World.chunkSizeZ; z++) {
-                int zPos = z + (int) (World.chunkSizeZ * position.z);
-                List<BlockType> column = chunkData.get(x).get(z);
-                for (int y = 0; y < World.chunkSizeY; y++) {
-
-                    int height = noiseArray[x][y][z];
-                    int yPos = y + height;
+            faceCull();
 
 
-                    if (column.get(yPos) != BlockType.AIR) {
-
-                        if (z == 0 || (z < World.chunkSizeZ && chunkData.get(x).get(z - 1).get(yPos) == BlockType.AIR))
-                            generateFace(xPos, yPos, zPos, FaceType.BACK);
-
-                        if (z == World.chunkSizeZ - 1 || (z < World.chunkSizeZ - 1 && chunkData.get(x).get(z + 1).get(yPos) == BlockType.AIR))
-                            generateFace(xPos, yPos, zPos, FaceType.FRONT);
-
-                        if (x == 0 || (x < World.chunkSizeX && chunkData.get(x - 1).get(z).get(yPos) == BlockType.AIR))
-                            generateFace(xPos, yPos, zPos, FaceType.LEFT);
-
-                        if (x == World.chunkSizeX - 1 || (x < World.chunkSizeX - 1 && chunkData.get(x + 1).get(z).get(yPos) == BlockType.AIR))
-                            generateFace(xPos, yPos, zPos, FaceType.RIGHT);
-
-                        if (yPos == height || (yPos < World.chunkSizeY + height && column.get(yPos-1) == BlockType.AIR))
-                            generateFace(xPos, yPos, zPos, FaceType.BOTTOM);
-
-                        // only render top if above is air
-                        if (yPos == World.chunkSizeY - 1 + height || (yPos < World.chunkSizeY - 1 + height && column.get(yPos+1) == BlockType.AIR))
-                            generateTopFace(xPos, yPos, zPos);
-
-
-                    }
-                }
+            opaqueVerts = new float[opaqueVerticesList.size()+transVerticesList.size()];
+            int i = 0;
+            for (Float f : opaqueVerticesList) {
+                opaqueVerts[i++] = f;
             }
 
-         */
+            for (Float f : transVerticesList) {
+                opaqueVerts[i++] = f;
+            }
+
+
+
+    }
+
+    private void faceCull(){
 
         for (int x = 0; x < chunkData.size(); x++) {
             int xPos = x + (int) (World.chunkSizeX * position.x);
@@ -542,28 +533,22 @@ public class Chunk {
                         if (x == World.chunkSizeX - 1 || chunkData.get(x + 1).get(z).get(y) == BlockType.AIR || (chunkData.get(x + 1).get(z).get(y) == BlockType.WATER && notWater))
                             generateFace(xPos, y, zPos, FaceType.RIGHT);
 
-                        if ((y == 0 || column.get(y-1) == BlockType.AIR ))
+                        if ((y == 0 || column.get(y - 1) == BlockType.AIR))
                             generateFace(xPos, y, zPos, FaceType.BOTTOM);
 
                         // only render top if above is air
-                        if ((y == column.size() || column.get(y+1) == BlockType.AIR) || (column.get(y+1) == BlockType.WATER && notWater))
+                        if ((y == column.size() || column.get(y + 1) == BlockType.AIR) || (column.get(y + 1) == BlockType.WATER && notWater))
                             generateTopFace(xPos, y, zPos);
                     }
                 }
-            }
-
-
-            verts = new float[verticesList.size()];
-            int i = 0;
-            for (Float f : verticesList) {
-                verts[i++] = f;
             }
         }
     }
 
 
 
-        public void update() {
+
+    public void update() {
             destroyMesh();
             generateData();
             generateMesh();
@@ -572,9 +557,9 @@ public class Chunk {
 
 
         public void destroyMesh () {
-            GL33.glDeleteVertexArrays(VAO);
-            GL33.glDeleteBuffers(VBO);
-            verticesList.clear();
-
+            glDeleteVertexArrays(VAO);
+            glDeleteBuffers(opaqueVBO);
+            opaqueVerticesList.clear();
+            transVerticesList.clear();
         }
     }
