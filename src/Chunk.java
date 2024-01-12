@@ -1,24 +1,30 @@
 import java.util.*;
 
-import org.joml.Vector3f;
 import org.joml.Vector3i;
 import org.lwjgl.opengl.*;
 
 import static org.lwjgl.opengl.GL46.*;
 
+import java.nio.FloatBuffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+
 
 public class Chunk {
 
-    public float[] opaqueVerts;
-
-    public float[] transVerts;
+    ByteBuffer byteBufferOpaque = ByteBuffer.allocateDirect(42* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder()); // allocates more memory than needed
+    //ByteBuffer byteBufferTrans = ByteBuffer.allocateDirect(36* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder());
+    FloatBuffer opaqueBuffer = byteBufferOpaque.asFloatBuffer();
+    //FloatBuffer transBuffer = byteBufferTrans.asFloatBuffer();
 
     public int opaqueVertsAmount = 0;
     public int transVertsAmount = 0;
 
-    ArrayList<Float> opaqueVerticesList = new ArrayList<>();
-    ArrayList<Float> transVerticesList = new ArrayList<>();
-    ArrayList<ArrayList<ArrayList<BlockType>>> chunkData = new ArrayList<>();
+
+    //ArrayList<ArrayList<ArrayList<BlockType>>> chunkData = new ArrayList<>();
+
+    BlockType[][][] chunkData = new BlockType[World.chunkSizeX][World.worldSizeY][World.chunkSizeZ];
     Map<BlockType, TextureCoords> blockTextures = new HashMap<>();
 
     public int VAO;
@@ -30,8 +36,8 @@ public class Chunk {
     FastNoiseLite moistNoise;
 
     // Function to combine vertex positions and texture coordinates
-    public Float[] combineVertexData(float[] positions, float[] texCoords) {
-        Float[] combined = new Float[positions.length+texCoords.length];
+    private float[] combineVertexData(float[] positions, float[] texCoords) {
+        float[] combined = new float[positions.length+texCoords.length];
         int index = 0;
         for (int i = 0, j = 0; i < positions.length; i += 6, j += 2) {
             combined[index++] = (positions[i]);     // x
@@ -127,9 +133,9 @@ public class Chunk {
 
         float[] verts;
 
-        BlockType blockType = chunkData.get(x - (World.chunkSizeX * position.x)).get(z - (World.chunkSizeZ * position.z)).get(y);
+        BlockType blockType = chunkData[x - (World.chunkSizeX * position.x)][y][z - (World.chunkSizeZ * position.z)];
 
-        if(blockType == BlockType.WATER && chunkData.get(x - (World.chunkSizeX * position.x)).get(z - (World.chunkSizeZ * position.z)).get(y+1) == BlockType.AIR) {
+        if(blockType == BlockType.WATER && chunkData[(x - (World.chunkSizeX * position.x))][y+1][((z - (World.chunkSizeZ * position.z)))] == BlockType.AIR) {
 
             verts = new float[]{
                     -0.5f + x, y + 0.35f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-left
@@ -159,21 +165,20 @@ public class Chunk {
         // Define the vertices for the top face of the block
 
         // Generate the default verts array
-        Float[] vertsList;
+
 
         if (blockType == BlockType.SIDEDIRT) {
-            vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.GRASS), FaceType.TOP));
-        } else if (blockType == BlockType.SIDESNOW) {
-            vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.SNOW), FaceType.TOP));
-        } else {
-            vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP));
-        }
-        if(blockType == BlockType.WATER){
-            Collections.addAll(transVerticesList, vertsList);
-            transVertsAmount += 6;
-        } else {
-            Collections.addAll(opaqueVerticesList, vertsList);
             opaqueVertsAmount += 6;
+            opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.GRASS), FaceType.TOP)));
+        } else if (blockType == BlockType.SIDESNOW) {
+            opaqueVertsAmount += 6;
+            opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.SNOW), FaceType.TOP)));
+        } else if(blockType == BlockType.WATER){
+            transVertsAmount += 6;
+            opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
+        } else {
+            opaqueVertsAmount += 6;
+            opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
         }
 
     }
@@ -182,11 +187,11 @@ public class Chunk {
 
     private void generateFace(int x, int y, int z, FaceType faceType){
 
-        BlockType blockType = chunkData.get(x - (World.chunkSizeX * position.x)).get(z - (World.chunkSizeZ * position.z)).get(y);
+        BlockType blockType = chunkData[(x - (World.chunkSizeX * position.x))][y][(z - (World.chunkSizeZ * position.z))];
 
         float[] verts = new float[36];
 
-        if(blockType == BlockType.WATER && chunkData.get(x - (World.chunkSizeX * position.x)).get(z - (World.chunkSizeZ * position.z)).get(y+1) == BlockType.AIR){ // no reason to have this atm but maybe in future.
+        if(blockType == BlockType.WATER && chunkData[(x - (World.chunkSizeX * position.x))][y+1][(z - (World.chunkSizeZ * position.z))] == BlockType.AIR){ // no reason to have this atm but maybe in future.
             switch (faceType) {
 
                 case FRONT:
@@ -312,14 +317,17 @@ public class Chunk {
         }
 
 
-        Float[] vertsList = combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), faceType));
+
 
         if(blockType == BlockType.WATER){ // disabled water because why would we need water sides atm aaaaaaaaaaaaaaaaaaaa
-            //Collections.addAll(transVerticesList, vertsList);
-            //transVertsAmount += 6;
+            /*
+            transVertsAmount += 6;
+            opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), faceType)));
+
+             */
         } else {
-            Collections.addAll(opaqueVerticesList, vertsList);
             opaqueVertsAmount += 6;
+            opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), faceType)));
         }
 
     }
@@ -366,19 +374,19 @@ public class Chunk {
 
     // Gather noise data
 
-    public int getNoiseY(int x, int y, int z) {
+    private int getNoiseY(int x, int y, int z) {
 
-        float frequency = 0.65f;
+        float frequency = 0.35f;
         float result = (
                 1 * (noise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency, (z + (World.chunkSizeZ * position.z)) * frequency) + 1))
                 + 0.5f * ((noise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency * 2, (z + (World.chunkSizeZ * position.z)) * frequency * 2) + 1))
                 + 0.25f * ((noise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency * 4, (z + (World.chunkSizeZ * position.z)) * frequency * 4) + 1));
 
-        result = (float) Math.pow(result, 2.64f);
+        result = (float) Math.pow(result, 2.33f);
 
         return (int) Math.floor(result * 2);
     }
-    public int getMoistNoiseY(int x, int y, int z) {
+    private int getMoistNoiseY(int x, int y, int z) {
 
         float frequency = 0.15f;
         float result = (
@@ -391,7 +399,7 @@ public class Chunk {
         return (int) Math.floor(result * 2);
     }
 
-    public int getRidgeNoiseY(int x, int y, int z) {
+    private int getRidgeNoiseY(int x, int y, int z) {
 
         float frequency = 0.15f;
         float result = (
@@ -442,56 +450,47 @@ public class Chunk {
 
         // create empty blocks of air
         for (int x = 0; x < World.chunkSizeX; x++) {
-            ArrayList<ArrayList<BlockType>> xList = new ArrayList<>();
-            for (int z = 0; z < World.chunkSizeZ; z++) {
-                ArrayList<BlockType> zList = new ArrayList<>();
-                for (int y = 0; y < World.worldSizeY; y++) {
-                    zList.add(BlockType.AIR);
+            for (int y = 0; y < World.worldSizeY; y++) {
+                for (int z = 0; z < World.chunkSizeZ; z++) {
+                    chunkData[x][y][z] = BlockType.AIR;
                 }
-                xList.add(zList);
             }
-            chunkData.add(xList);
         }
-
-
-
 
 
         // modify blocks
         for (int x = 0; x < World.chunkSizeX; x++) {
-            ArrayList<ArrayList<BlockType>> xList = chunkData.get(x);
-            for (int z = 0; z < World.chunkSizeZ; z++) {
-                ArrayList<BlockType> yList = xList.get(z);
-                int noiseY = getNoiseY(x, 0, z);
-                int ridgeNoiseY = getRidgeNoiseY(x, 0, z);
-                int moistNoiseY = getMoistNoiseY(x,0,z);
-                for (int y = 0; y < World.chunkSizeY; y++) {
-
+            for (int y = 0; y < World.chunkSizeY; y++) {
+                for (int z = 0; z < World.chunkSizeZ; z++) {
+                    int noiseY = getNoiseY(x, 0, z);
+                    int ridgeNoiseY = getRidgeNoiseY(x, 0, z);
+                    int moistNoiseY = getMoistNoiseY(x,0,z);
                     int adjustedY = noiseY + y;
+
 
                     switch(getBiome(moistNoiseY)){
 
                         case GRASSLANDS:
 
                             if (adjustedY < 64) {
-                                yList.set(adjustedY, BlockType.STONE);
-                                yList.set(y, BlockType.STONE);
+                                chunkData[x][adjustedY][z] = BlockType.STONE;
+                                chunkData[x][y][z] = BlockType.STONE;
 
                             } else if (y == World.chunkSizeY - 1 && adjustedY < 78) {
-                                yList.set(adjustedY, BlockType.SIDEDIRT);
+                                chunkData[x][adjustedY][z] = BlockType.SIDEDIRT;
                             } else if (y == World.chunkSizeY - 1) {
-                                yList.set(adjustedY, BlockType.SIDESNOW);
+                                chunkData[x][adjustedY][z] = BlockType.SIDESNOW;
                             } else {
-                                yList.set(adjustedY, BlockType.DIRT);
+                                chunkData[x][adjustedY][z] = BlockType.DIRT;
                             }
 
                             // water
                             if(noiseY < 5 && adjustedY > 62) {
-                                yList.set(adjustedY, BlockType.SAND);
-                                yList.set(adjustedY-1, BlockType.SAND);
+                                chunkData[x][adjustedY][z] = BlockType.SAND;
+                                chunkData[x][adjustedY-1][z] = BlockType.SAND;
                                 if(noiseY < 4){ // Fill with water
                                     for(int i = 0; i < 5-noiseY; i++){
-                                        yList.set(adjustedY+i, BlockType.WATER);
+                                        chunkData[x][adjustedY+i][z] =BlockType.WATER;
                                     }
 
                                 }
@@ -501,30 +500,25 @@ public class Chunk {
                         case ROCKLANDS:
 
                             int noise = ridgeNoiseY + y;
-                            if(moistNoiseY > 10  && moistNoiseY  < 30){
-                                noise = (adjustedY+noise)/2;
-                            } else {
-                                noise = ridgeNoiseY + y;
-                            }
 
                             if (noise < 64) {
-                                yList.set(noise, BlockType.LAVA);
-                                yList.set(y, BlockType.LAVA);
+                                chunkData[x][noise][z] = BlockType.LAVA;
+                                chunkData[x][y][z] = BlockType.LAVA;
 
                             } else if (y == World.chunkSizeY - 1 && adjustedY < 78) {
-                                yList.set(noise, BlockType.HELLSTONE);
+                                chunkData[x][noise][z] = BlockType.HELLSTONE;
                             } else if (y == World.chunkSizeY - 1) {
-                                yList.set(noise, BlockType.OBSIDIAN);
+                                chunkData[x][noise][z] = BlockType.OBSIDIAN;
                             } else {
-                                yList.set(noise, BlockType.OBSIDIAN);
+                                chunkData[x][noise][z] = BlockType.OBSIDIAN;
                             }
                             // water
-                            if(noise < 5 && noise > 62) {
-                                yList.set(noise, BlockType.OBSIDIAN);
-                                yList.set(noise-1, BlockType.OBSIDIAN);
+                            if(noise < 5 && ridgeNoiseY > 62) {
+                                chunkData[x][noise][z] = BlockType.OBSIDIAN;
+                                chunkData[x][noise-1][z] = BlockType.OBSIDIAN;
                                 if(noise < 4){ // Fill with water
                                     for(int i = 0; i < 5-noise; i++){
-                                        yList.set(noise+i, BlockType.LAVA);
+                                        chunkData[x][noise+i][z] = BlockType.LAVA;
                                     }
 
                                 }
@@ -539,9 +533,9 @@ public class Chunk {
                     }
 
                     // dumb but whatever
-                    yList.set(0, BlockType.BEDROCK);
-                    yList.set(1, BlockType.BEDROCK);
-                    yList.set(2, BlockType.BEDROCK);
+                    chunkData[x][0][z] = BlockType.BEDROCK;
+                    chunkData[x][1][z] = BlockType.BEDROCK;
+                    chunkData[x][2][z] = BlockType.BEDROCK;
 
                 }
             }
@@ -555,8 +549,13 @@ public class Chunk {
 
     private Biomes getBiome(int noise){
 
+    /*
         if(noise > 20)
             return Biomes.ROCKLANDS;
+
+     */
+
+
 
         return Biomes.GRASSLANDS;
     }
@@ -570,7 +569,7 @@ public class Chunk {
 
         opaqueVBO = glGenBuffers();
         glBindBuffer(GL_ARRAY_BUFFER, opaqueVBO);
-        glBufferData(GL_ARRAY_BUFFER, opaqueVerts, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, opaqueBuffer, GL_DYNAMIC_DRAW);
 
         GL46.glVertexAttribBinding(0,0);
 
@@ -589,59 +588,47 @@ public class Chunk {
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        opaqueVerts = null;
-        transVerts = null;
     }
 
     private void generateData() {
 
-            faceCull();
 
+        faceCull();
 
-            opaqueVerts = new float[opaqueVerticesList.size()+transVerticesList.size()];
-            int i = 0;
-            for (Float f : opaqueVerticesList) {
-                opaqueVerts[i++] = f;
-            }
-
-            for (Float f : transVerticesList) {
-                opaqueVerts[i++] = f;
-            }
-
-
+        opaqueBuffer.flip();
 
     }
 
     private void faceCull(){
 
-        for (int x = 0; x < chunkData.size(); x++) {
+        for (int x = 0; x < World.chunkSizeX; x++) {
             int xPos = x + (World.chunkSizeX * position.x);
-            for (int z = 0; z < chunkData.get(0).size(); z++) {
-                int zPos = z + (World.chunkSizeZ * position.z);
-                List<BlockType> column = chunkData.get(x).get(z);
-                for (int y = 0; y < column.size(); y++) {
+            for (int y = 0; y < World.worldSizeY; y++) {
+                for (int z = 0; z < World.chunkSizeZ; z++) {
+                    int zPos = z + (World.chunkSizeZ * position.z);
 
-                    boolean notWater = column.get(y) != BlockType.WATER;
+                    boolean notWater = chunkData[x][y][z] != BlockType.WATER;
 
                     // there are probably uncessary checks here and i somehow got caves under mountains without it being intended.
-                    if (column.get(y) != BlockType.AIR) {
-                        if (z == 0 || (chunkData.get(x).get(z - 1).get(y) == BlockType.AIR || (chunkData.get(x).get(z - 1).get(y) == BlockType.WATER && notWater)))
+                    if (chunkData[x][y][z] != BlockType.AIR) {
+
+                        if (z == 0 || chunkData[x][y][z-1] == BlockType.AIR || (chunkData[x][y][z-1] == BlockType.WATER && notWater))
                             generateFace(xPos, y, zPos, FaceType.BACK);
 
-                        if (z == World.chunkSizeZ - 1 || chunkData.get(x).get(z + 1).get(y) == BlockType.AIR || (chunkData.get(x).get(z + 1).get(y) == BlockType.WATER && notWater))
+                        if (z == World.chunkSizeZ - 1 || chunkData[x][y][z+1] == BlockType.AIR || (chunkData[x][y][z+1] == BlockType.WATER && notWater))
                             generateFace(xPos, y, zPos, FaceType.FRONT);
 
-                        if (x == 0 || chunkData.get(x - 1).get(z).get(y) == BlockType.AIR || (chunkData.get(x - 1).get(z).get(y) == BlockType.WATER && notWater))
+                        if (x == 0 || chunkData[x-1][y][z] == BlockType.AIR || (chunkData[x-1][y][z] == BlockType.WATER && notWater))
                             generateFace(xPos, y, zPos, FaceType.LEFT);
 
-                        if (x == World.chunkSizeX - 1 || chunkData.get(x + 1).get(z).get(y) == BlockType.AIR || (chunkData.get(x + 1).get(z).get(y) == BlockType.WATER && notWater))
+                        if (x == World.chunkSizeX - 1 || chunkData[x+1][y][z] == BlockType.AIR || (chunkData[x+1][y][z] == BlockType.WATER && notWater))
                             generateFace(xPos, y, zPos, FaceType.RIGHT);
 
-                        if ((y == 0 || column.get(y - 1) == BlockType.AIR))
+                        if ((y == 0 || chunkData[x][y-1][z] == BlockType.AIR))
                             generateFace(xPos, y, zPos, FaceType.BOTTOM);
 
                         // only render top if above is air
-                        if ((y == column.size() || column.get(y + 1) == BlockType.AIR) || (column.get(y + 1) == BlockType.WATER && notWater))
+                        if ((y == chunkData[0].length || chunkData[x][y+1][z] == BlockType.AIR) || chunkData[x][y+1][z] == BlockType.WATER && notWater)
                             generateTopFace(xPos, y, zPos);
                     }
                 }
@@ -663,10 +650,8 @@ public class Chunk {
         public void destroyMesh () {
             glDeleteVertexArrays(VAO);
             glDeleteBuffers(opaqueVBO);
-            opaqueVerticesList.clear();
-            transVerticesList.clear();
+            opaqueBuffer.clear();
             opaqueVertsAmount = 0;
             transVertsAmount = 0;
-
         }
     }

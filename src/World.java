@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 public class World {
 
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    private ConcurrentLinkedQueue<Chunk> chunkQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Chunk> chunkQueue = new ConcurrentLinkedQueue<>();
 
     // List to keep track of Future objects
 
@@ -32,8 +32,8 @@ public class World {
 
     static int worldSizeY = 256;
 
-    static int worldSizeX = 8;
-    static int worldSizeZ = 8;
+    static int worldSizeX = 16;
+    static int worldSizeZ = 16;
     private int  delay = 0; // chunk generation delay, bad name ik
 
     private Vector3f plyPos;
@@ -46,29 +46,6 @@ public class World {
     // Let's make dumb and simple start
 
     World() {
-
-
-        /*
-        for (int x = 0; x < worldSizeX; x++){
-            for (int z = 0; z < worldSizeZ; z++){
-
-                int finalX = x;
-                int finalZ = z;
-                executor.submit(() -> {
-                    try {
-                        Chunk chunk = new Chunk(new Vector3i(finalX - (worldSizeX) / 2, 0, finalZ - (worldSizeZ) / 2));
-                        chunkQueue.offer(chunk); // Add to queue
-                    } catch (Exception e){
-                        System.err.println("Error occurred while processing chunk: " + e.getMessage());
-                        e.printStackTrace();
-                    }
-
-                });
-            }
-        }
-
-        processGeneratedChunks();
-         */
 
         Renderer.renderObjects = chunks;
         Skybox sky = new Skybox();
@@ -88,7 +65,7 @@ public class World {
             Vector2i chunkPosition = new Vector2i(chunk.position.x, chunk.position.z);
             if(Math.abs(chunkPosition.x - chunkWorld.x) > worldSizeX-1 || (Math.abs(chunkPosition.y - chunkWorld.z)) > worldSizeX-1){
                 chunkPosListemove(chunkPosition);
-                System.out.println("chunk was removed at: " + chunkPosition);
+                //System.out.println("chunk was removed at: " + chunkPosition);
                 chunk.destroyMesh();
                 iterator.remove();
             }
@@ -102,14 +79,14 @@ public class World {
                     Vector3i chunkPosition = new Vector3i((x + chunkWorld.x) - (worldSizeX/2), 0, (z + chunkWorld.z) - (worldSizeZ/2));
 
 
-                    if (!chunkPosExists(new Vector2i(chunkPosition.x, chunkPosition.z))) {
+                    if (!chunkPosExists(new Vector2i(chunkPosition.x, chunkPosition.z)) && delay < 1) {
                         chunkPosList.add(new Vector2i(chunkPosition.x, chunkPosition.z));
-                        delay = 500;
+                        delay = 400;
                         synchronized (this) {
-                            executor.submit(() -> {
-                                Chunk chunk = new Chunk(chunkPosition);
-                                chunkQueue.offer(chunk); // Add to queue
-                            });
+                                executor.submit(() -> {
+                                    Chunk chunk = new Chunk(chunkPosition);
+                                    chunkQueue.offer(chunk); // Add to queue
+                                });
                         }
 
                     }
@@ -211,7 +188,7 @@ public class World {
                 int blockX = blockCoords.x;
                 int blockY = blockCoords.y;
                 int blockZ = blockCoords.z;
-                Chunk.BlockType block  = chunk.chunkData.get(blockX).get(blockZ).get(blockY);
+                Chunk.BlockType block  = chunk.chunkData[blockX][blockY][blockZ];
                     //System.out.println("Checking block at: " + chunk.chunkData.get(blockX).get(blockZ).get(blockY));
 
                 if(block != Chunk.BlockType.AIR && block != Chunk.BlockType.BEDROCK && block != Chunk.BlockType.WATER ){
@@ -225,7 +202,7 @@ public class World {
                     } else {
                         debug = chunk;
                     }
-                    chunk.chunkData.get(blockX).get(blockZ).set(blockY, Chunk.BlockType.AIR);
+                    chunk.chunkData[blockX][blockY][blockZ] = Chunk.BlockType.AIR;
                     chunk.update();
                     return true;
                 }
