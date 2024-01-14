@@ -203,6 +203,7 @@ public class Renderer {
         shader.setVec3("plyPos", camera.position);
         shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
         shader.setVec3("lightPos", lightPos);
+        shader.setInt("fogDist", World.fogDist);
     }
 
 

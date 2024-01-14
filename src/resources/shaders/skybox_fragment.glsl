@@ -8,10 +8,15 @@ in vec3 FragPos;
 uniform samplerCube skybox;
 uniform vec3 plyPos;
 
-vec3 lightColor = vec3(1.0, 0.95, 0.8);
+vec3 fogColor = vec3(0.0, 0.0, 0.0);
+
+
 
 void main()
 {
-    vec4 skyColor = texture(skybox, TexCoords);
+
+
+    //vec4 skyColor = texture(skybox, TexCoords);
+    vec4 skyColor = vec4(fogColor, 1.0);
     FragColor = skyColor;
 }

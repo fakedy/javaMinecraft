@@ -26,14 +26,16 @@ public class World {
 
     // This is where we will create our world
 
-    static int chunkSizeX = 32;
-    static int chunkSizeZ = 32;
+    static int chunkSizeX = 22;
+    static int chunkSizeZ = 22;
     static int chunkSizeY = 64;
 
     static int worldSizeY = 256;
 
-    static int worldSizeX = 16;
-    static int worldSizeZ = 16;
+    static int worldSizeX = 24;
+    static int worldSizeZ = 24;
+
+    static int fogDist = ((chunkSizeX*worldSizeX)/2)-10;
     private int  delay = 0; // chunk generation delay, bad name ik
 
     private Vector3f plyPos;
@@ -191,7 +193,7 @@ public class World {
                 Chunk.BlockType block  = chunk.chunkData[blockX][blockY][blockZ];
                     //System.out.println("Checking block at: " + chunk.chunkData.get(blockX).get(blockZ).get(blockY));
 
-                if(block != Chunk.BlockType.AIR && block != Chunk.BlockType.BEDROCK && block != Chunk.BlockType.WATER ){
+                if(block != Chunk.BlockType.AIR && block != Chunk.BlockType.BEDROCK && !Chunk.isLiquid(block) ){
                     //System.out.println("removing block at: " + getBlockCoordWithinChunk(position));
 
                     if(debug != null){

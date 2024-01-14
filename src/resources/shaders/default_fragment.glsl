@@ -11,6 +11,7 @@ uniform sampler2D shadowMap;
 uniform vec3 lightPos;
 
 uniform vec3 plyPos;
+uniform int fogDist;
 
 
 vec3 lightDir;
@@ -22,17 +23,17 @@ vec3 lightDirection = vec3(-0.5f, -1.0f, -0.5f);
 
 float get_fog_factor() {
 
-    float nearplane = 180.0; // Where the fog starts
-    float farplane =  250.0; // where the max fog is reached
+    float nearplane = 0; // Where the fog starts
+    float farplane =  fogDist; // where the max fog is reached
 
     float fogmax = 1.0 * farplane;
     float fogmin = 0.5 * farplane;
-    //if (fragDist >= fogmax)discard; // fog edge
+    if (fragDist >= fogmax)discard; // fog edge
     //if (fragDist <= fogmin)return 0.0; // fog edge
     fragDist = clamp(fragDist, fogmin, fogmax);
 
-    return 0.0;
-    //return 1.0 - (fogmax - fragDist) / (fogmax - fogmin); // everything between the fog edges
+    //return 0.0;
+    return 1.0 - (fogmax - fragDist) / (fogmax - fogmin); // everything between the fog edges
 }
 
 float ShadowCalculation(vec4 fragPosLightSpace)
@@ -60,9 +61,11 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 
 void main()
 {
+    float fogFactor = get_fog_factor();
     vec4 color = texture(ourTexture, TexCoord).rgba;
     normal = normalize(Normal);
     vec3 lightColor = vec3(1.0, 0.95, 0.8);
+    vec3 fogColor = vec3(0.0, 0.0, 0.0);
     // ambient
     vec3 ambient = 0.1 * lightColor; // indirect light
     // diffuse
@@ -83,7 +86,5 @@ void main()
     // gamma correction
     //float gamma = 2.2;
     //lighting.rgb = pow(lighting, vec3(1.0/gamma));
-    float fogFactor = get_fog_factor();
-
-    FragColor = mix(vec4(lighting), vec4(lightColor, 0.0), fogFactor);
+    FragColor = mix(vec4(lighting), vec4(fogColor, 0.0), fogFactor);
 }

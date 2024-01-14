@@ -133,13 +133,13 @@ public class Chunk {
         }
     }
 
-    private void generateTopFace(int x, int y, int z) {
+    private void generateTopFace(int x, int y, int z, int lengthX, int lengthY) {
 
         float[] verts;
 
         BlockType blockType = chunkData[x - (World.chunkSizeX * position.x)][y][z - (World.chunkSizeZ * position.z)];
 
-        if(blockType == BlockType.WATER && chunkData[(x - (World.chunkSizeX * position.x))][y+1][((z - (World.chunkSizeZ * position.z)))] == BlockType.AIR) {
+        if((blockType == BlockType.WATER || blockType == BlockType.LAVA) && chunkData[(x - (World.chunkSizeX * position.x))][y+1][((z - (World.chunkSizeZ * position.z)))] == BlockType.AIR) {
 
             verts = new float[]{
                     -0.5f + x, y + 0.35f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-left
@@ -177,10 +177,10 @@ public class Chunk {
         } else if (blockType == BlockType.SIDESNOW) {
             opaqueVertsAmount += 6;
             opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.SNOW), FaceType.TOP)));
-        } else if(blockType == BlockType.WATER){
+        } else if(isLiquid(blockType)){
             transVertsAmount += 6;
             transBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
-        } else {
+        }  else {
             opaqueVertsAmount += 6;
             opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
         }
@@ -189,13 +189,13 @@ public class Chunk {
 
 
 
-    private void generateFace(int x, int y, int z, FaceType faceType){
+    private void generateFace(int x, int y, int z, int lengthX, int lengthY, FaceType faceType){
 
         BlockType blockType = chunkData[(x - (World.chunkSizeX * position.x))][y][(z - (World.chunkSizeZ * position.z))];
 
         float[] verts = new float[36];
 
-        if(blockType == BlockType.WATER && chunkData[(x - (World.chunkSizeX * position.x))][y+1][(z - (World.chunkSizeZ * position.z))] == BlockType.AIR){ // no reason to have this atm but maybe in future.
+        if((isLiquid(blockType)) && chunkData[(x - (World.chunkSizeX * position.x))][y+1][(z - (World.chunkSizeZ * position.z))] == BlockType.AIR){ // no reason to have this atm but maybe in future.
             switch (faceType) {
 
                 case FRONT:
@@ -322,7 +322,7 @@ public class Chunk {
 
 
 
-        if(blockType == BlockType.WATER){ // disabled water because why would we need water sides atm aaaaaaaaaaaaaaaaaaaa
+        if(isLiquid(blockType)){ // disabled water because why would we need water sides atm aaaaaaaaaaaaaaaaaaaa
             /*
             transVertsAmount += 6;
             opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), faceType)));
@@ -550,11 +550,11 @@ public class Chunk {
 
     private Biomes getBiome(int noise){
 
-    /*
+
         if(noise > 20)
             return Biomes.ROCKLANDS;
 
-     */
+
 
 
 
@@ -637,39 +637,48 @@ public class Chunk {
 
     private void faceCull(){
 
+        int lengthX = 1;
+        int lengthY = 1;
+
         for (int x = 0; x < World.chunkSizeX; x++) {
             int xPos = x + (World.chunkSizeX * position.x);
             for (int y = 0; y < World.worldSizeY; y++) {
                 for (int z = 0; z < World.chunkSizeZ; z++) {
                     int zPos = z + (World.chunkSizeZ * position.z);
 
-                    boolean notWater = chunkData[x][y][z] != BlockType.WATER;
+
 
                     // there are probably uncessary checks here and i somehow got caves under mountains without it being intended.
                     if (chunkData[x][y][z] != BlockType.AIR) {
 
-                        if (z == 0 || chunkData[x][y][z-1] == BlockType.AIR || (chunkData[x][y][z-1] == BlockType.WATER && notWater))
-                            generateFace(xPos, y, zPos, FaceType.BACK);
+                        if (z == 0 || chunkData[x][y][z-1] == BlockType.AIR || (isLiquid(chunkData[x][y][z-1]) && !isLiquid(chunkData[x][y][z])))
+                            generateFace(xPos, y, zPos, lengthX, lengthY, FaceType.BACK);
 
-                        if (z == World.chunkSizeZ - 1 || chunkData[x][y][z+1] == BlockType.AIR || (chunkData[x][y][z+1] == BlockType.WATER && notWater))
-                            generateFace(xPos, y, zPos, FaceType.FRONT);
+                        if (z == World.chunkSizeZ - 1 || chunkData[x][y][z+1] == BlockType.AIR || (isLiquid(chunkData[x][y][z+1]) && !isLiquid(chunkData[x][y][z])))
+                            generateFace(xPos, y, zPos, lengthX, lengthY, FaceType.FRONT);
 
-                        if (x == 0 || chunkData[x-1][y][z] == BlockType.AIR || (chunkData[x-1][y][z] == BlockType.WATER && notWater))
-                            generateFace(xPos, y, zPos, FaceType.LEFT);
+                        if (x == 0 || chunkData[x-1][y][z] == BlockType.AIR || (isLiquid(chunkData[x-1][y][z]) && !isLiquid(chunkData[x][y][z])))
+                            generateFace(xPos, y, zPos, lengthX, lengthY, FaceType.LEFT);
 
-                        if (x == World.chunkSizeX - 1 || chunkData[x+1][y][z] == BlockType.AIR || (chunkData[x+1][y][z] == BlockType.WATER && notWater))
-                            generateFace(xPos, y, zPos, FaceType.RIGHT);
+                        if (x == World.chunkSizeX - 1 || chunkData[x+1][y][z] == BlockType.AIR || (isLiquid(chunkData[x+1][y][z]) && !isLiquid(chunkData[x][y][z])))
+                            generateFace(xPos, y, zPos, lengthX, lengthY, FaceType.RIGHT);
 
                         if ((y == 0 || chunkData[x][y-1][z] == BlockType.AIR))
-                            generateFace(xPos, y, zPos, FaceType.BOTTOM);
+                            generateFace(xPos, y, zPos, lengthX, lengthY, FaceType.BOTTOM);
 
                         // only render top if above is air
-                        if ((y == chunkData[0].length || chunkData[x][y+1][z] == BlockType.AIR) || chunkData[x][y+1][z] == BlockType.WATER && notWater)
-                            generateTopFace(xPos, y, zPos);
+                        if ((y == chunkData[0].length || chunkData[x][y+1][z] == BlockType.AIR) || isLiquid(chunkData[x][y+1][z]) && !isLiquid(chunkData[x][y][z]))
+                            generateTopFace(xPos, y, lengthX, lengthY, zPos);
                     }
                 }
             }
         }
+    }
+
+
+    public static boolean isLiquid (BlockType block){
+
+        return block == BlockType.WATER || block == BlockType.LAVA;
     }
 
 
