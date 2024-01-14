@@ -81,7 +81,7 @@ public class World {
 
                     if (!chunkPosExists(new Vector2i(chunkPosition.x, chunkPosition.z)) && delay < 1) {
                         chunkPosList.add(new Vector2i(chunkPosition.x, chunkPosition.z));
-                        delay = 400;
+                        delay = 10;
                         synchronized (this) {
                                 executor.submit(() -> {
                                     Chunk chunk = new Chunk(chunkPosition);

@@ -21,7 +21,7 @@ public class Player {
     // euler Angles
     float yaw = -90.0f;
     float pitch = 0.0f;
-    double speed = 35.0;
+    double speed = 65.0;
     float sens =  0.1f;
 
 

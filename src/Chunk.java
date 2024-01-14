@@ -13,10 +13,10 @@ import java.nio.ByteOrder;
 
 public class Chunk {
 
-    ByteBuffer byteBufferOpaque = ByteBuffer.allocateDirect(42* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder()); // allocates more memory than needed
-    //ByteBuffer byteBufferTrans = ByteBuffer.allocateDirect(36* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder());
-    FloatBuffer opaqueBuffer = byteBufferOpaque.asFloatBuffer();
-    //FloatBuffer transBuffer = byteBufferTrans.asFloatBuffer();
+    ByteBuffer byteBufferOpaque;
+    ByteBuffer byteBufferTrans;
+    FloatBuffer opaqueBuffer;
+    FloatBuffer transBuffer;
 
     public int opaqueVertsAmount = 0;
     public int transVertsAmount = 0;
@@ -27,8 +27,12 @@ public class Chunk {
     BlockType[][][] chunkData = new BlockType[World.chunkSizeX][World.worldSizeY][World.chunkSizeZ];
     Map<BlockType, TextureCoords> blockTextures = new HashMap<>();
 
-    public int VAO;
+    public int opaqueVAO;
+
     public int opaqueVBO;
+
+    public int transVAO;
+    public int transVBO;
 
     public Vector3i position;
     FastNoiseLite noise;
@@ -175,7 +179,7 @@ public class Chunk {
             opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.SNOW), FaceType.TOP)));
         } else if(blockType == BlockType.WATER){
             transVertsAmount += 6;
-            opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
+            transBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
         } else {
             opaqueVertsAmount += 6;
             opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
@@ -310,7 +314,6 @@ public class Chunk {
                             0.5f + x, -0.5f + y, 0.5f + z, 0.0f, -1.0f, 0.0f,// bottom-left
                             -0.5f + x, -0.5f + y, 0.5f + z, 0.0f, -1.0f, 0.0f, // bottom-right
                             -0.5f + x, -0.5f + y, -0.5f + z, 0.0f, -1.0f, 0.0f,  // top-right
-
                     };
                     break;
             }
@@ -331,8 +334,6 @@ public class Chunk {
         }
 
     }
-
-
 
 
     public enum BlockType {
@@ -564,14 +565,34 @@ public class Chunk {
     public void generateMesh() {
 
 
-        VAO = glGenVertexArrays();
-        glBindVertexArray(VAO);
+        opaqueVAO = glGenVertexArrays();
+        glBindVertexArray(opaqueVAO);
 
         opaqueVBO = glGenBuffers();
         glBindBuffer(GL_ARRAY_BUFFER, opaqueVBO);
         glBufferData(GL_ARRAY_BUFFER, opaqueBuffer, GL_DYNAMIC_DRAW);
 
-        GL46.glVertexAttribBinding(0,0);
+        // position attribute
+        glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 0);
+        glEnableVertexAttribArray(0);
+
+        // normal attribute
+        glVertexAttribPointer(1, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
+        glEnableVertexAttribArray(1);
+        // color attribute
+        glVertexAttribPointer(2, 2, GL33.GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
+        glEnableVertexAttribArray(2);
+
+
+
+
+
+        transVAO = glGenVertexArrays();
+        glBindVertexArray(transVAO);
+
+        transVBO = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, transVBO);
+        glBufferData(GL_ARRAY_BUFFER, transBuffer, GL_DYNAMIC_DRAW);
 
         // position attribute
         glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 0);
@@ -588,14 +609,29 @@ public class Chunk {
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+        byteBufferOpaque = null;
+        byteBufferTrans = null;
+        opaqueBuffer = null;
+        transBuffer = null;
+
     }
 
+
+
+
     private void generateData() {
+
+        // magic number allocation size
+        byteBufferOpaque = ByteBuffer.allocateDirect(42* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder()); // allocates more memory than needed
+        byteBufferTrans = ByteBuffer.allocateDirect(30* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder());
+        opaqueBuffer = byteBufferOpaque.asFloatBuffer();
+        transBuffer = byteBufferTrans.asFloatBuffer();
 
 
         faceCull();
 
         opaqueBuffer.flip();
+        transBuffer.flip();
 
     }
 
@@ -648,9 +684,10 @@ public class Chunk {
 
 
         public void destroyMesh () {
-            glDeleteVertexArrays(VAO);
+            glDeleteVertexArrays(opaqueVAO);
             glDeleteBuffers(opaqueVBO);
-            opaqueBuffer.clear();
+            glDeleteVertexArrays(transVAO);
+            glDeleteBuffers(transVBO);
             opaqueVertsAmount = 0;
             transVertsAmount = 0;
         }

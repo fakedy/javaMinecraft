@@ -119,16 +119,26 @@ public class Renderer {
         //glBindTexture(GL_TEXTURE_2D, 1);
         for (int i = 0; i < renderObjects.size(); i++){
 
-            glBindVertexArray(renderObjects.get(i).VAO);
+            glBindVertexArray(renderObjects.get(i).opaqueVAO);
 
             glEnable(GL_CULL_FACE);
             glDisable(GL_BLEND);
-            glBindBuffer(GL_ARRAY_BUFFER, renderObjects.get(i).opaqueVBO);
             glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).opaqueVertsAmount);
+
+
+
+
+
+        }
+
+        //glBindTexture(GL_TEXTURE_2D, 1);
+        for (int i = 0; i < renderObjects.size(); i++){
 
             glDisable(GL_CULL_FACE);
             glEnable(GL_BLEND);
-            glDrawArrays(GL_TRIANGLES, renderObjects.get(i).opaqueVertsAmount, renderObjects.get(i).transVertsAmount);
+            glBindVertexArray(renderObjects.get(i).transVAO);
+
+            glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).transVertsAmount);
 
 
         }
