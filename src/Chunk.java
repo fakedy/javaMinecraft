@@ -32,8 +32,7 @@ public class Chunk {
 
     //ArrayList<ArrayList<ArrayList<BlockType>>> chunkData = new ArrayList<>();
 
-    BlockType[][][] chunkData = new BlockType[World.chunkSizeX][World.worldSizeY][World.chunkSizeZ];
-    Map<BlockType, TextureCoords> blockTextures = new HashMap<>();
+    Blocks.BlockType[][][] chunkData;
 
     public int opaqueVAO;
 
@@ -43,9 +42,7 @@ public class Chunk {
     public int transVBO;
 
     public Vector3i position;
-    FastNoiseLite noise;
 
-    FastNoiseLite moistNoise;
 
     // Function to combine vertex positions and texture coordinates
     private Collection<? extends Float> combineVertexData(float[] positions, float[] texCoords) {
@@ -68,86 +65,15 @@ public class Chunk {
         TOP, LEFT, FRONT, BACK, BOTTOM, RIGHT
     }
 
-    public float[] getTextureCoords(TextureCoords cords, FaceType faceType) {
-        float tileWidth = 1.0f / cords.tileAcross; // prob 16
-        float startX = cords.x * tileWidth;
-        float startY = cords.y * tileWidth;
-        float endX = startX + tileWidth;
-        float endY = startY + tileWidth;
 
-        switch (faceType) {
-            case TOP:
-                // Assuming TOP needs standard orientation
-                return new float[]{
-                        startX, endY,
-                        endX, startY,
-                        endX, endY,
-                        endX, startY,
-                        startX, endY,
-                        startX, startY
-                };
-            case LEFT:
-                // Assuming LEFT needs to be flipped vertically
-                return new float[]{
-                        startX, startY,
-                        endX, startY,
-                        endX, endY,
-                        endX, endY,
-                        startX, endY,
-                        startX, startY
-                };
-            case FRONT:
-                // Assuming FRONT needs to be flipped horizontally
-                return new float[]{
-                        startX, endY,
-                        endX, endY,
-                        endX, startY,
-                        endX, startY,
-                        startX, startY,
-                        startX, endY
-                };
-            case BACK:
-                // Assuming BACK face orientation is same as FRONT
-                return new float[]{
-                        endX, endY,
-                        startX, startY,
-                        startX, endY,
-                        startX, startY,
-                        endX, endY,
-                        endX, startY
-                };
-            case BOTTOM:
-                // Assuming BOTTOM face orientation is same as TOP
-                return new float[]{
-                        startX, startY,
-                        endX, startY,
-                        endX, endY,
-                        endX, endY,
-                        startX, endY,
-                        startX, startY
-                };
-            case RIGHT:
-                // Assuming RIGHT face orientation is same as LEFT
-                return new float[]{
-                        startX, startY,
-                        endX, endY,
-                        endX, startY,
-                        endX, endY,
-                        startX, startY,
-                        startX, endY
-                };
-            default:
-                return null; // or some default value
-        }
-    }
 
     private void generateTopFace(int x, int y, int z) {
 
         float[] verts;
 
-        BlockType blockType = chunkData[x - (World.chunkSizeX * position.x)][y][z - (World.chunkSizeZ * position.z)];
+        Blocks.BlockType blockType = chunkData[x - (World.chunkSizeX * position.x)][y][z - (World.chunkSizeZ * position.z)];
 
-        if((blockType == BlockType.WATER || blockType == BlockType.LAVA) && chunkData[(x - (World.chunkSizeX * position.x))][y+1][((z - (World.chunkSizeZ * position.z)))] == BlockType.AIR) {
+        if((blockType == Blocks.BlockType.WATER || blockType == Blocks.BlockType.LAVA) && chunkData[(x - (World.chunkSizeX * position.x))][y+1][((z - (World.chunkSizeZ * position.z)))] == Blocks.BlockType.AIR) {
 
             verts = new float[]{
                     -0.5f + x, y + 0.35f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-left
@@ -179,18 +105,18 @@ public class Chunk {
         // Generate the default verts array
 
 
-        if (blockType == BlockType.SIDEDIRT) {
+        if (blockType == Blocks.BlockType.SIDEDIRT) {
             opaqueVertsAmount += 6;
-            opaqueVertList.addAll(combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.GRASS), FaceType.TOP)));
-        } else if (blockType == BlockType.SIDESNOW) {
+            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(Blocks.blockTextures.get(Blocks.BlockType.GRASS), FaceType.TOP)));
+        } else if (blockType == Blocks.BlockType.SIDESNOW) {
             opaqueVertsAmount += 6;
-            opaqueVertList.addAll(combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.SNOW), FaceType.TOP)));
+            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(Blocks.blockTextures.get(Blocks.BlockType.SNOW), FaceType.TOP)));
         } else if(isLiquid(blockType)){
             transVertsAmount += 6;
-            transVertList.addAll(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
+            transVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(Blocks.blockTextures.get(blockType), FaceType.TOP)));
         }  else {
             opaqueVertsAmount += 6;
-            opaqueVertList.addAll(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
+            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(Blocks.blockTextures.get(blockType), FaceType.TOP)));
         }
 
     }
@@ -199,11 +125,11 @@ public class Chunk {
 
     private void generateFace(int x, int y, int z, FaceType faceType){
 
-        BlockType blockType = chunkData[(x - (World.chunkSizeX * position.x))][y][(z - (World.chunkSizeZ * position.z))];
+        Blocks.BlockType blockType = chunkData[(x - (World.chunkSizeX * position.x))][y][(z - (World.chunkSizeZ * position.z))];
 
         float[] verts = new float[36];
 
-        if((isLiquid(blockType)) && chunkData[(x - (World.chunkSizeX * position.x))][y+1][(z - (World.chunkSizeZ * position.z))] == BlockType.AIR){ // no reason to have this atm but maybe in future.
+        if((isLiquid(blockType)) && chunkData[(x - (World.chunkSizeX * position.x))][y+1][(z - (World.chunkSizeZ * position.z))] == Blocks.BlockType.AIR){ // no reason to have this atm but maybe in future.
             switch (faceType) {
 
                 case FRONT:
@@ -338,239 +264,29 @@ public class Chunk {
              */
         } else {
             opaqueVertsAmount += 6;
-            opaqueVertList.addAll(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), faceType)));
+            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(Blocks.blockTextures.get(blockType), faceType)));
         }
 
     }
-
-
-    public enum BlockType {
-        AIR,
-        GRASS,
-        DIRT,
-        STONE,
-        SIDEDIRT,
-        PLANKS,
-        COBBLESTONE,
-        WATER,
-        SNOW,
-        SIDESNOW,
-        BEDROCK,
-        SAND,
-        LAVA,
-        OBSIDIAN,
-        HELLSTONE,
-    }
-
-    private enum Biomes{
-        GRASSLANDS,
-        ROCKLANDS,
-        SNOWLANDS,
-    }
-
-    public class TextureCoords {
-        public int x;
-        public int y;
-
-        public int tileAcross = 16;
-
-        public TextureCoords(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-    }
-
-    // Gather noise data
-
-    private int getNoiseY(int x, int y, int z) {
-
-        float frequency = 0.35f;
-        float result = (
-                1 * (noise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency, (z + (World.chunkSizeZ * position.z)) * frequency) + 1))
-                + 0.5f * ((noise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency * 2, (z + (World.chunkSizeZ * position.z)) * frequency * 2) + 1))
-                + 0.25f * ((noise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency * 4, (z + (World.chunkSizeZ * position.z)) * frequency * 4) + 1));
-
-        result = (float) Math.pow(result, 2.33f);
-
-        return (int) Math.floor(result * 2);
-    }
-    private int getMoistNoiseY(int x, int y, int z) {
-
-        float frequency = 0.15f;
-        float result = (
-                1 * (moistNoise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency, (z + (World.chunkSizeZ * position.z)) * frequency) + 1))
-                + 0.5f * ((moistNoise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency * 2, (z + (World.chunkSizeZ * position.z)) * frequency * 2) + 1))
-                + 0.25f * ((moistNoise.GetNoise((x + (World.chunkSizeX * position.x)) * frequency * 4, (z + (World.chunkSizeZ * position.z)) * frequency * 4) + 1));
-
-        result = (float) Math.pow(result, 3.24f);
-
-        return (int) Math.floor(result * 2);
-    }
-
-    private int getRidgeNoiseY(int x, int y, int z) {
-
-        float frequency = 0.15f;
-        float result = (
-                1 * (ridgeNoise((x + (World.chunkSizeX * position.x)) * frequency, (z + (World.chunkSizeZ * position.z)) * frequency) + 1))
-                + 0.5f * ((ridgeNoise((x + (World.chunkSizeX * position.x)) * frequency * 2, (z + (World.chunkSizeZ * position.z)) * frequency * 2) + 1))
-                + 0.25f * ((ridgeNoise((x + (World.chunkSizeX * position.x)) * frequency * 4, (z + (World.chunkSizeZ * position.z)) * frequency * 4) + 1));
-
-        result = (float) Math.pow(result, 3.24f);
-
-        return (int) Math.floor(result * 2);
-    }
-
-    private float ridgeNoise(float nx,float ny){
-
-        return (float) (2 * (0.5 - Math.abs(0.5 - noise.GetNoise(nx, ny))));
-    }
-
 
 
 
     public Chunk(Vector3i position) {
-
-        blockTextures.put(BlockType.GRASS, new TextureCoords(0, 0));
-        blockTextures.put(BlockType.STONE, new TextureCoords(1, 0));
-        blockTextures.put(BlockType.DIRT, new TextureCoords(2, 0));
-        blockTextures.put(BlockType.SIDEDIRT, new TextureCoords(3, 0));
-        blockTextures.put(BlockType.PLANKS, new TextureCoords(4, 0));
-        blockTextures.put(BlockType.COBBLESTONE, new TextureCoords(0, 1));
-        blockTextures.put(BlockType.WATER, new TextureCoords(14, 12));
-        blockTextures.put(BlockType.SNOW, new TextureCoords(2, 4));
-        blockTextures.put(BlockType.SIDESNOW, new TextureCoords(4, 4));
-        blockTextures.put(BlockType.BEDROCK, new TextureCoords(1, 1));
-        blockTextures.put(BlockType.SAND, new TextureCoords(2, 1));
-        blockTextures.put(BlockType.LAVA, new TextureCoords(15, 15));
-        blockTextures.put(BlockType.OBSIDIAN, new TextureCoords(5, 2));
-        blockTextures.put(BlockType.HELLSTONE, new TextureCoords(7, 6));
-
-        noise = new FastNoiseLite();
-        noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
-
-        moistNoise = new FastNoiseLite();
-        moistNoise.SetSeed(234234);
 
 
         this.position = position;
 
         //System.out.println("Created chunk at: " + position);
 
-        // create empty blocks of air
-        for (int x = 0; x < World.chunkSizeX; x++) {
-            for (int y = 0; y < World.worldSizeY; y++) {
-                for (int z = 0; z < World.chunkSizeZ; z++) {
-                    chunkData[x][y][z] = BlockType.AIR;
-                }
-            }
-        }
 
+        chunkData = Terrain.initData();
 
-        // modify blocks
-        for (int x = 0; x < World.chunkSizeX; x++) {
-            for (int y = 0; y < World.chunkSizeY; y++) {
-                for (int z = 0; z < World.chunkSizeZ; z++) {
-                    int noiseY = getNoiseY(x, 0, z);
-                    int ridgeNoiseY = getRidgeNoiseY(x, 0, z);
-                    int moistNoiseY = getMoistNoiseY(x,0,z);
-                    int adjustedY = noiseY + y;
-
-
-                    switch(getBiome(moistNoiseY)){
-
-                        case GRASSLANDS:
-
-                            if (adjustedY < 64) {
-                                chunkData[x][adjustedY][z] = BlockType.STONE;
-                                chunkData[x][y][z] = BlockType.STONE;
-
-                            } else if (y == World.chunkSizeY - 1 && adjustedY < 78) {
-                                chunkData[x][adjustedY][z] = BlockType.SIDEDIRT;
-                            } else if (y == World.chunkSizeY - 1) {
-                                chunkData[x][adjustedY][z] = BlockType.SIDESNOW;
-                            } else {
-                                chunkData[x][adjustedY][z] = BlockType.DIRT;
-                            }
-
-                            // water
-                            if(noiseY < 5 && adjustedY > 62) {
-                                chunkData[x][adjustedY][z] = BlockType.SAND;
-                                chunkData[x][adjustedY-1][z] = BlockType.SAND;
-                                if(noiseY < 4){ // Fill with water
-                                    for(int i = 0; i < 5-noiseY; i++){
-                                        chunkData[x][adjustedY+i][z] =BlockType.WATER;
-                                    }
-
-                                }
-                            }
-                            break;
-
-                        case ROCKLANDS:
-
-                            int noise = ridgeNoiseY + y;
-
-                            if (noise < 64) {
-                                chunkData[x][noise][z] = BlockType.STONE;
-                                chunkData[x][y][z] = BlockType.LAVA;
-
-                            } else if (y == World.chunkSizeY - 1 && adjustedY < 78) {
-                                chunkData[x][noise][z] = BlockType.HELLSTONE;
-                            } else if (y == World.chunkSizeY - 1) {
-                                chunkData[x][noise][z] = BlockType.OBSIDIAN;
-                            } else {
-                                chunkData[x][noise][z] = BlockType.OBSIDIAN;
-                            }
-                            // water
-                            if(noise < 5 && ridgeNoiseY > 62) {
-                                chunkData[x][noise][z] = BlockType.OBSIDIAN;
-                                chunkData[x][noise-1][z] = BlockType.OBSIDIAN;
-                                if(noise < 4){ // Fill with water
-                                    for(int i = 0; i < 5-noise; i++){
-                                        chunkData[x][noise+i][z] = BlockType.LAVA;
-                                    }
-
-                                }
-                            }
-
-                            break;
-
-
-                        case SNOWLANDS:
-                            break;
-
-                    }
-
-                    // dumb but whatever
-                    chunkData[x][0][z] = BlockType.BEDROCK;
-                    chunkData[x][1][z] = BlockType.BEDROCK;
-                    chunkData[x][2][z] = BlockType.BEDROCK;
-
-                }
-            }
-        }
-
+        Terrain.shapeTerrain(chunkData, position);
 
         //generateData();
-
-
     }
 
-    private Biomes getBiome(int noise){
 
-
-        /*
-        if(noise > 20)
-            return Biomes.ROCKLANDS;
-
-         */
-
-
-
-
-
-        return Biomes.GRASSLANDS;
-    }
 
 
     public void generateMesh() {
@@ -670,26 +386,26 @@ public class Chunk {
 
 
 
-                    if (chunkData[x][y][z] != BlockType.AIR) {
+                    if (chunkData[x][y][z] != Blocks.BlockType.AIR) {
 
 
-                        if (( backChunk != null && z == 0 && backChunk.chunkData[x][y][World.chunkSizeZ-1] == BlockType.AIR) || z != 0 && (chunkData[x][y][z-1] == BlockType.AIR || (isLiquid(chunkData[x][y][z-1]) && !isLiquid(chunkData[x][y][z]))))
+                        if (( backChunk != null && z == 0 && (backChunk.chunkData[x][y][World.chunkSizeZ-1] == Blocks.BlockType.AIR || isLiquid(backChunk.chunkData[x][y][World.chunkSizeZ-1]))) || z != 0 && (chunkData[x][y][z-1] == Blocks.BlockType.AIR || (isLiquid(chunkData[x][y][z-1]) && !isLiquid(chunkData[x][y][z]))))
                             generateFace(xPos, y, zPos, FaceType.BACK);
 
-                        if (( frontChunk != null && z == World.chunkSizeZ - 1 && frontChunk.chunkData[x][y][0] == BlockType.AIR) || z != World.chunkSizeZ - 1 && (chunkData[x][y][z+1] == BlockType.AIR || (isLiquid(chunkData[x][y][z+1]) && !isLiquid(chunkData[x][y][z]))))
+                        if (( frontChunk != null && z == World.chunkSizeZ - 1 && (frontChunk.chunkData[x][y][0] == Blocks.BlockType.AIR || isLiquid(frontChunk.chunkData[x][y][0]))) || z != World.chunkSizeZ - 1 && (chunkData[x][y][z+1] == Blocks.BlockType.AIR || (isLiquid(chunkData[x][y][z+1]) && !isLiquid(chunkData[x][y][z]))))
                             generateFace(xPos, y, zPos, FaceType.FRONT);
 
-                        if (( leftChunk != null && x == 0 && leftChunk.chunkData[World.chunkSizeX-1][y][z] == BlockType.AIR) || x != 0 && (chunkData[x-1][y][z] == BlockType.AIR || (isLiquid(chunkData[x-1][y][z]) && !isLiquid(chunkData[x][y][z]))))
+                        if (( leftChunk != null && x == 0 && (leftChunk.chunkData[World.chunkSizeX-1][y][z] == Blocks.BlockType.AIR || isLiquid(leftChunk.chunkData[World.chunkSizeX-1][y][z]))) || x != 0 && (chunkData[x-1][y][z] == Blocks.BlockType.AIR || (isLiquid(chunkData[x-1][y][z]) && !isLiquid(chunkData[x][y][z]))))
                             generateFace(xPos, y, zPos, FaceType.LEFT);
 
-                        if (( rightChunk != null && x == World.chunkSizeX - 1 && rightChunk.chunkData[0][y][z] == BlockType.AIR) || x != World.chunkSizeX - 1 && (chunkData[x+1][y][z] == BlockType.AIR || (isLiquid(chunkData[x+1][y][z]) && !isLiquid(chunkData[x][y][z]))))
+                        if (( rightChunk != null && x == World.chunkSizeX - 1 && (rightChunk.chunkData[0][y][z] == Blocks.BlockType.AIR || isLiquid(rightChunk.chunkData[0][y][z]))) || x != World.chunkSizeX - 1 && (chunkData[x+1][y][z] == Blocks.BlockType.AIR || (isLiquid(chunkData[x+1][y][z]) && !isLiquid(chunkData[x][y][z]))))
                             generateFace(xPos, y, zPos, FaceType.RIGHT);
 
-                        if ((y == 0 || chunkData[x][y-1][z] == BlockType.AIR))
+                        if ((y == 0 || chunkData[x][y-1][z] == Blocks.BlockType.AIR))
                             generateFace(xPos, y, zPos, FaceType.BOTTOM);
 
                         // only render top if above is air
-                        if ((y == chunkData[0].length || chunkData[x][y+1][z] == BlockType.AIR) || isLiquid(chunkData[x][y+1][z]) && !isLiquid(chunkData[x][y][z]))
+                        if ((y == chunkData[0].length || chunkData[x][y+1][z] == Blocks.BlockType.AIR) || isLiquid(chunkData[x][y+1][z]) && !isLiquid(chunkData[x][y][z]))
                             generateTopFace(xPos, y, zPos);
                     }
                 }
@@ -698,9 +414,9 @@ public class Chunk {
     }
 
 
-    public static boolean isLiquid (BlockType block){
+    public static boolean isLiquid (Blocks.BlockType block){
 
-        return block == BlockType.WATER || block == BlockType.LAVA;
+        return block == Blocks.BlockType.WATER || block == Blocks.BlockType.LAVA;
     }
 
 

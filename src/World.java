@@ -288,7 +288,7 @@ public class World {
                 int blockX = blockCoords.x;
                 int blockY = blockCoords.y;
                 int blockZ = blockCoords.z;
-                Chunk.BlockType block  = chunk.chunkData[blockX][blockY][blockZ];
+                Blocks.BlockType block  = chunk.chunkData[blockX][blockY][blockZ];
                 /*
                 System.out.println(chunk.leftChunk + " left chunk");
                 System.out.println(chunk.rightChunk + " right chunk");
@@ -298,7 +298,7 @@ public class World {
                  */
                     //System.out.println("Checking block at: " + chunk.chunkData.get(blockX).get(blockZ).get(blockY));
 
-                if(block != Chunk.BlockType.AIR && block != Chunk.BlockType.BEDROCK && !Chunk.isLiquid(block) ){
+                if(block != Blocks.BlockType.AIR && block != Blocks.BlockType.BEDROCK && !Chunk.isLiquid(block) ){
                     //System.out.println("removing block at: " + getBlockCoordWithinChunk(position));
 
 
@@ -310,7 +310,7 @@ public class World {
                     } else {
                         debug = chunk;
                     }
-                    chunk.chunkData[blockX][blockY][blockZ] = Chunk.BlockType.AIR;
+                    chunk.chunkData[blockX][blockY][blockZ] = Blocks.BlockType.AIR;
 
 
                     // clunky, have to update each chunks neighbour then update itself again.

@@ -65,7 +65,7 @@ void main()
     vec4 color = texture(ourTexture, TexCoord).rgba;
     normal = normalize(Normal);
     vec3 lightColor = vec3(1.0, 0.95, 0.8);
-    vec3 fogColor = vec3(0.0, 0.0, 0.0);
+    vec3 fogColor = vec3(0.0, 0.25, 0.25);
     // ambient
     vec3 ambient = 0.1 * lightColor; // indirect light
     // diffuse
