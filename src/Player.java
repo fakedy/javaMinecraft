@@ -6,7 +6,7 @@ public class Player {
 
     // horrible code, horrible horrible horrible horrible horrible
 
-    Vector3f position = new Vector3f(0.0f,64.0f,0.0f);
+    Vector3f position = new Vector3f(0.0f,80.0f,0.0f);
     Vector3f rotation;
     Vector3f scale;
 

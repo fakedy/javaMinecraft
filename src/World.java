@@ -6,13 +6,12 @@ import org.joml.Vector3i;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
+import java.util.Map;
+import java.util.concurrent.*;
 
 
 public class World {
@@ -25,26 +24,31 @@ public class World {
 
 
     // This is where we will create our world
+    // This has become so messy
 
-    static int chunkSizeX = 22;
-    static int chunkSizeZ = 22;
+    static int chunkSizeX = 16;
+    static int chunkSizeZ = 16;
     static int chunkSizeY = 64;
 
     static int worldSizeY = 256;
 
-    static int worldSizeX = 24;
-    static int worldSizeZ = 24;
+    static int worldSizeX = 16;
+    static int worldSizeZ = 16;
 
-    static int fogDist = ((chunkSizeX*worldSizeX)/2)-10;
+    static int fogDist = ((chunkSizeX*worldSizeX)/2)-20;
     private int  delay = 0; // chunk generation delay, bad name ik
 
     private Vector3f plyPos;
 
     static ArrayList<Chunk> chunks = new ArrayList<>();
+    Map<Vector3i, Chunk> chunkPosMap = new HashMap<>();
 
     private ArrayList<Vector2i> chunkPosList = new ArrayList<>();
 
+    private Iterator<Chunk> nullNeighboursIterator;
+    private ArrayList<Chunk> nullNeighboursList = new ArrayList<>();
 
+    Iterator<Chunk> iterator;
     // Let's make dumb and simple start
 
     World() {
@@ -61,45 +65,46 @@ public class World {
         plyPos = Game.player.position;
         Vector3i chunkWorld = getChunkCoord(plyPos);
 
-        Iterator<Chunk> iterator = chunks.iterator();
-        while(iterator.hasNext()){
-            Chunk chunk = iterator.next();
-            Vector2i chunkPosition = new Vector2i(chunk.position.x, chunk.position.z);
-            if(Math.abs(chunkPosition.x - chunkWorld.x) > worldSizeX-1 || (Math.abs(chunkPosition.y - chunkWorld.z)) > worldSizeX-1){
-                chunkPosListemove(chunkPosition);
-                //System.out.println("chunk was removed at: " + chunkPosition);
-                chunk.destroyMesh();
-                iterator.remove();
-            }
-
-        }
+        removeChunks();
 
 
-            for (int x = 0; x < worldSizeX; x++){
-                for (int z = 0; z < worldSizeZ; z++){
+            ArrayList<Future<?>> futures = new ArrayList<>();
+            for (int x = 0; x < worldSizeX; x++) {
+                for (int z = 0; z < worldSizeZ; z++) {
 
-                    Vector3i chunkPosition = new Vector3i((x + chunkWorld.x) - (worldSizeX/2), 0, (z + chunkWorld.z) - (worldSizeZ/2));
+                    Vector3i chunkPosition = new Vector3i((x + chunkWorld.x) - (worldSizeX / 2), 0, (z + chunkWorld.z) - (worldSizeZ / 2));
 
-
-                    if (!chunkPosExists(new Vector2i(chunkPosition.x, chunkPosition.z)) && delay < 1) {
+                    if (!chunkPosExists(new Vector2i(chunkPosition.x, chunkPosition.z))) {
                         chunkPosList.add(new Vector2i(chunkPosition.x, chunkPosition.z));
-                        delay = 10;
+
                         synchronized (this) {
-                                executor.submit(() -> {
-                                    Chunk chunk = new Chunk(chunkPosition);
-                                    chunkQueue.offer(chunk); // Add to queue
-                                });
+                            Future<?> future = executor.submit(() -> {
+                                Chunk chunk = new Chunk(chunkPosition);
+                                chunkQueue.offer(chunk); // Add to queue
+                                chunkPosMap.put(chunkPosition, chunk);
+                            });
+                            futures.add(future);
                         }
-
                     }
-                    delay--;
                 }
-
             }
 
-        processGeneratedChunks();
+            for (Future<?> future : futures) {
+                try {
+                    future.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
 
+
+        setNeighbours();
+        processGeneratedChunks();
+        System.out.println(chunks.size());
         }
+
+
+
 
         boolean chunkPosExists(Vector2i chunkPos){
             for(Vector2i pos : chunkPosList){
@@ -108,6 +113,115 @@ public class World {
             }
         return false;
     }
+
+
+    void removeChunks(){
+        plyPos = Game.player.position;
+        Vector3i chunkWorld = getChunkCoord(plyPos);
+        iterator = chunks.iterator();
+        while(iterator.hasNext()){
+            Chunk chunk = iterator.next();
+            Vector2i chunkPosition = new Vector2i(chunk.position.x, chunk.position.z);
+            if(Math.abs(chunkPosition.x - chunkWorld.x) > (worldSizeX/2) || (Math.abs(chunkPosition.y - chunkWorld.z)) > (worldSizeX/2)){
+                chunkPosMap.remove(chunk.position);
+                chunkPosListemove(chunkPosition);
+                chunk.destroyMesh();
+                iterator.remove();
+            }
+        }
+    }
+
+    void setNeighbours(){
+
+        // this is shit
+
+        for (Chunk chunk : chunkQueue){
+
+            Vector3i origin = chunk.position;
+
+            boolean isNull = false;
+
+            Vector3i leftChunkPos = new Vector3i(origin.x - 1, origin.y, origin.z);
+            Vector3i rightChunkPos = new Vector3i(origin.x + 1, origin.y, origin.z);
+            Vector3i backChunkPos = new Vector3i(origin.x, origin.y, origin.z - 1);
+            Vector3i frontChunkPos = new Vector3i(origin.x, origin.y, origin.z + 1);
+
+            if(findChunk(leftChunkPos) != null){
+                chunk.leftChunk = findChunk(leftChunkPos);
+            } else {
+                isNull = true;
+            }
+            if(findChunk(rightChunkPos) != null){
+                chunk.rightChunk = findChunk(rightChunkPos);
+            } else {
+                isNull = true;
+            }
+            if(findChunk(backChunkPos) != null){
+                chunk.backChunk = findChunk(backChunkPos);
+            } else {
+                isNull = true;
+            }
+            if(findChunk(frontChunkPos) != null){
+                chunk.frontChunk = findChunk(frontChunkPos);
+            } else {
+                isNull = true;
+            }
+
+            if(isNull)
+                nullNeighboursList.add(chunk);
+        }
+
+        // this is bad but needed at the moment.
+
+        nullNeighboursIterator = nullNeighboursList.iterator();
+
+        while (nullNeighboursIterator.hasNext()){
+
+            Chunk chunk = nullNeighboursIterator.next();
+
+            Vector3i origin = chunk.position;
+
+            boolean isNull = false;
+
+            Vector3i leftChunkPos = new Vector3i(origin.x - 1, origin.y, origin.z);
+            Vector3i rightChunkPos = new Vector3i(origin.x + 1, origin.y, origin.z);
+            Vector3i backChunkPos = new Vector3i(origin.x, origin.y, origin.z - 1);
+            Vector3i frontChunkPos = new Vector3i(origin.x, origin.y, origin.z + 1);
+
+            if(findChunk(leftChunkPos) != null){
+                chunk.leftChunk = findChunk(leftChunkPos);
+            } else {
+                isNull = true;
+            }
+            if(findChunk(rightChunkPos) != null){
+                chunk.rightChunk = findChunk(rightChunkPos);
+            } else {
+                isNull = true;
+            }
+            if(findChunk(backChunkPos) != null){
+                chunk.backChunk = findChunk(backChunkPos);
+            } else {
+                isNull = true;
+            }
+            if(findChunk(frontChunkPos) != null){
+                chunk.frontChunk = findChunk(frontChunkPos);
+            } else {
+                isNull = true;
+            }
+
+            if(!isNull) {
+                //chunk.update(); // causes crash ;D
+                nullNeighboursIterator.remove();
+            }
+
+        }
+    }
+
+    Chunk findChunk(Vector3i pos){
+
+            return chunkPosMap.get(pos);
+    }
+
 
     void chunkPosListemove(Vector2i chunkPos){
 
@@ -126,9 +240,10 @@ public class World {
     }
 
     public void processGeneratedChunks() {
-        while (!chunkQueue.isEmpty()) {
+        while(!chunkQueue.isEmpty()) {
             Chunk chunk = chunkQueue.poll();
             if (chunk != null) {
+                chunk.generateData();
                 chunk.generateMesh(); // OpenGL operations
                 chunks.add(chunk);
                 //sortChunks();
@@ -137,18 +252,6 @@ public class World {
         }
     }
 
-    private void sortChunks() {
-        if (!chunks.isEmpty()) {
-            System.out.println("sorting");
-
-            // Sort chunks based on their distance from the player
-            chunks.sort((chunk1, chunk2) -> {
-                float dist1 = plyPos.distance(chunk1.position.x, chunk1.position.y, chunk1.position.z);
-                float dist2 = plyPos.distance(chunk2.position.x, chunk2.position.y, chunk2.position.z);
-                return Float.compare(dist2, dist1); // Sort in descending order
-            });
-        }
-    }
 
 
 
@@ -160,6 +263,8 @@ public class World {
 
         return new Vector3i(chunkCoordX, chunkCoordY, chunkCoordZ);
     }
+
+
 
     public static Vector3i getBlockCoordWithinChunk(Vector3f pos) {
         int blockCoordX = (int) pos.x % chunkSizeX;
@@ -191,10 +296,18 @@ public class World {
                 int blockY = blockCoords.y;
                 int blockZ = blockCoords.z;
                 Chunk.BlockType block  = chunk.chunkData[blockX][blockY][blockZ];
+                /*
+                System.out.println(chunk.leftChunk + " left chunk");
+                System.out.println(chunk.rightChunk + " right chunk");
+                System.out.println(chunk.frontChunk + " front chunk");
+                System.out.println(chunk.backChunk + " back chunk");
+
+                 */
                     //System.out.println("Checking block at: " + chunk.chunkData.get(blockX).get(blockZ).get(blockY));
 
                 if(block != Chunk.BlockType.AIR && block != Chunk.BlockType.BEDROCK && !Chunk.isLiquid(block) ){
                     //System.out.println("removing block at: " + getBlockCoordWithinChunk(position));
+
 
                     if(debug != null){
                         if(!debug.equals(chunk)){
@@ -205,12 +318,23 @@ public class World {
                         debug = chunk;
                     }
                     chunk.chunkData[blockX][blockY][blockZ] = Chunk.BlockType.AIR;
+
+
+                    // clunky, have to update each chunks neighbour then update itself again.
                     chunk.update();
+                    chunk.leftChunk.update();
+                    chunk.rightChunk.update();
+                    chunk.frontChunk.update();
+                    chunk.backChunk.update();
+                    chunk.update();
+
+
                     return true;
                 }
             }
         }
         return false;  // or throw an exception or handle this case as you see fit
     }
+
 
 }

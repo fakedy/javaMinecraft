@@ -13,6 +13,12 @@ import java.nio.ByteOrder;
 
 public class Chunk {
 
+
+    Chunk rightChunk;
+    Chunk leftChunk;
+    Chunk frontChunk;
+    Chunk backChunk;
+
     ByteBuffer byteBufferOpaque;
     ByteBuffer byteBufferTrans;
     FloatBuffer opaqueBuffer;
@@ -133,7 +139,7 @@ public class Chunk {
         }
     }
 
-    private void generateTopFace(int x, int y, int z, int lengthX, int lengthY) {
+    private void generateTopFace(int x, int y, int z) {
 
         float[] verts;
 
@@ -189,7 +195,7 @@ public class Chunk {
 
 
 
-    private void generateFace(int x, int y, int z, int lengthX, int lengthY, FaceType faceType){
+    private void generateFace(int x, int y, int z, FaceType faceType){
 
         BlockType blockType = chunkData[(x - (World.chunkSizeX * position.x))][y][(z - (World.chunkSizeZ * position.z))];
 
@@ -503,7 +509,7 @@ public class Chunk {
                             int noise = ridgeNoiseY + y;
 
                             if (noise < 64) {
-                                chunkData[x][noise][z] = BlockType.LAVA;
+                                chunkData[x][noise][z] = BlockType.STONE;
                                 chunkData[x][y][z] = BlockType.LAVA;
 
                             } else if (y == World.chunkSizeY - 1 && adjustedY < 78) {
@@ -543,7 +549,7 @@ public class Chunk {
         }
 
 
-        generateData();
+        //generateData();
 
 
     }
@@ -551,8 +557,11 @@ public class Chunk {
     private Biomes getBiome(int noise){
 
 
+        /*
         if(noise > 20)
             return Biomes.ROCKLANDS;
+
+         */
 
 
 
@@ -564,66 +573,70 @@ public class Chunk {
 
     public void generateMesh() {
 
+        if(opaqueBuffer != null){
+            opaqueVAO = glGenVertexArrays();
+            glBindVertexArray(opaqueVAO);
 
-        opaqueVAO = glGenVertexArrays();
-        glBindVertexArray(opaqueVAO);
+            opaqueVBO = glGenBuffers();
+            glBindBuffer(GL_ARRAY_BUFFER, opaqueVBO);
+            glBufferData(GL_ARRAY_BUFFER, opaqueBuffer, GL_DYNAMIC_DRAW);
 
-        opaqueVBO = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, opaqueVBO);
-        glBufferData(GL_ARRAY_BUFFER, opaqueBuffer, GL_DYNAMIC_DRAW);
+            // position attribute
+            glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 0);
+            glEnableVertexAttribArray(0);
 
-        // position attribute
-        glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 0);
-        glEnableVertexAttribArray(0);
-
-        // normal attribute
-        glVertexAttribPointer(1, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
-        glEnableVertexAttribArray(1);
-        // color attribute
-        glVertexAttribPointer(2, 2, GL33.GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
-        glEnableVertexAttribArray(2);
-
-
-
+            // normal attribute
+            glVertexAttribPointer(1, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
+            glEnableVertexAttribArray(1);
+            // color attribute
+            glVertexAttribPointer(2, 2, GL33.GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
+            glEnableVertexAttribArray(2);
+        }
 
 
-        transVAO = glGenVertexArrays();
-        glBindVertexArray(transVAO);
-
-        transVBO = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, transVBO);
-        glBufferData(GL_ARRAY_BUFFER, transBuffer, GL_DYNAMIC_DRAW);
-
-        // position attribute
-        glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 0);
-        glEnableVertexAttribArray(0);
-
-        // normal attribute
-        glVertexAttribPointer(1, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
-        glEnableVertexAttribArray(1);
-        // color attribute
-        glVertexAttribPointer(2, 2, GL33.GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
-        glEnableVertexAttribArray(2);
 
 
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        byteBufferOpaque = null;
-        byteBufferTrans = null;
-        opaqueBuffer = null;
-        transBuffer = null;
+
+        if(transBuffer != null) {
+            transVAO = glGenVertexArrays();
+            glBindVertexArray(transVAO);
+
+            transVBO = glGenBuffers();
+            glBindBuffer(GL_ARRAY_BUFFER, transVBO);
+            glBufferData(GL_ARRAY_BUFFER, transBuffer, GL_DYNAMIC_DRAW);
+
+            // position attribute
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * Float.BYTES, 0);
+            glEnableVertexAttribArray(0);
+
+            // normal attribute
+            glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
+            glEnableVertexAttribArray(1);
+            // color attribute
+            glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
+            glEnableVertexAttribArray(2);
+
+
+            glBindVertexArray(0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            byteBufferOpaque = null;
+            byteBufferTrans = null;
+            opaqueBuffer = null;
+            transBuffer = null;
+        }
 
     }
 
 
 
 
-    private void generateData() {
+    void generateData() {
 
         // magic number allocation size
-        byteBufferOpaque = ByteBuffer.allocateDirect(42* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder()); // allocates more memory than needed
-        byteBufferTrans = ByteBuffer.allocateDirect(30* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder());
+        byteBufferOpaque = ByteBuffer.allocateDirect(12* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder()); // allocates more memory than needed
+        byteBufferTrans = ByteBuffer.allocateDirect(12* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder());
         opaqueBuffer = byteBufferOpaque.asFloatBuffer();
         transBuffer = byteBufferTrans.asFloatBuffer();
 
@@ -637,8 +650,6 @@ public class Chunk {
 
     private void faceCull(){
 
-        int lengthX = 1;
-        int lengthY = 1;
 
         for (int x = 0; x < World.chunkSizeX; x++) {
             int xPos = x + (World.chunkSizeX * position.x);
@@ -648,27 +659,28 @@ public class Chunk {
 
 
 
-                    // there are probably uncessary checks here and i somehow got caves under mountains without it being intended.
+
                     if (chunkData[x][y][z] != BlockType.AIR) {
 
-                        if (z == 0 || chunkData[x][y][z-1] == BlockType.AIR || (isLiquid(chunkData[x][y][z-1]) && !isLiquid(chunkData[x][y][z])))
-                            generateFace(xPos, y, zPos, lengthX, lengthY, FaceType.BACK);
 
-                        if (z == World.chunkSizeZ - 1 || chunkData[x][y][z+1] == BlockType.AIR || (isLiquid(chunkData[x][y][z+1]) && !isLiquid(chunkData[x][y][z])))
-                            generateFace(xPos, y, zPos, lengthX, lengthY, FaceType.FRONT);
+                        if (( backChunk != null && z == 0 && backChunk.chunkData[x][y][World.chunkSizeZ-1] == BlockType.AIR) || z != 0 && (chunkData[x][y][z-1] == BlockType.AIR || (isLiquid(chunkData[x][y][z-1]) && !isLiquid(chunkData[x][y][z]))))
+                            generateFace(xPos, y, zPos, FaceType.BACK);
 
-                        if (x == 0 || chunkData[x-1][y][z] == BlockType.AIR || (isLiquid(chunkData[x-1][y][z]) && !isLiquid(chunkData[x][y][z])))
-                            generateFace(xPos, y, zPos, lengthX, lengthY, FaceType.LEFT);
+                        if (( frontChunk != null && z == World.chunkSizeZ - 1 && frontChunk.chunkData[x][y][0] == BlockType.AIR) || z != World.chunkSizeZ - 1 && (chunkData[x][y][z+1] == BlockType.AIR || (isLiquid(chunkData[x][y][z+1]) && !isLiquid(chunkData[x][y][z]))))
+                            generateFace(xPos, y, zPos, FaceType.FRONT);
 
-                        if (x == World.chunkSizeX - 1 || chunkData[x+1][y][z] == BlockType.AIR || (isLiquid(chunkData[x+1][y][z]) && !isLiquid(chunkData[x][y][z])))
-                            generateFace(xPos, y, zPos, lengthX, lengthY, FaceType.RIGHT);
+                        if (( leftChunk != null && x == 0 && leftChunk.chunkData[World.chunkSizeX-1][y][z] == BlockType.AIR) || x != 0 && (chunkData[x-1][y][z] == BlockType.AIR || (isLiquid(chunkData[x-1][y][z]) && !isLiquid(chunkData[x][y][z]))))
+                            generateFace(xPos, y, zPos, FaceType.LEFT);
+
+                        if (( rightChunk != null && x == World.chunkSizeX - 1 && rightChunk.chunkData[0][y][z] == BlockType.AIR) || x != World.chunkSizeX - 1 && (chunkData[x+1][y][z] == BlockType.AIR || (isLiquid(chunkData[x+1][y][z]) && !isLiquid(chunkData[x][y][z]))))
+                            generateFace(xPos, y, zPos, FaceType.RIGHT);
 
                         if ((y == 0 || chunkData[x][y-1][z] == BlockType.AIR))
-                            generateFace(xPos, y, zPos, lengthX, lengthY, FaceType.BOTTOM);
+                            generateFace(xPos, y, zPos, FaceType.BOTTOM);
 
                         // only render top if above is air
                         if ((y == chunkData[0].length || chunkData[x][y+1][z] == BlockType.AIR) || isLiquid(chunkData[x][y+1][z]) && !isLiquid(chunkData[x][y][z]))
-                            generateTopFace(xPos, y, lengthX, lengthY, zPos);
+                            generateTopFace(xPos, y, zPos);
                     }
                 }
             }
