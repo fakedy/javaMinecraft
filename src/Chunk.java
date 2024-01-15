@@ -19,10 +19,12 @@ public class Chunk {
     Chunk frontChunk;
     Chunk backChunk;
 
-    ByteBuffer byteBufferOpaque;
-    ByteBuffer byteBufferTrans;
-    FloatBuffer opaqueBuffer;
-    FloatBuffer transBuffer;
+
+    ArrayList<Float> opaqueVertList;
+    float[] opaqueVertArray;
+    ArrayList<Float> transVertList;
+
+    float[] transVertArray;
 
     public int opaqueVertsAmount = 0;
     public int transVertsAmount = 0;
@@ -46,8 +48,8 @@ public class Chunk {
     FastNoiseLite moistNoise;
 
     // Function to combine vertex positions and texture coordinates
-    private float[] combineVertexData(float[] positions, float[] texCoords) {
-        float[] combined = new float[positions.length+texCoords.length];
+    private Collection<? extends Float> combineVertexData(float[] positions, float[] texCoords) {
+        Float[] combined = new Float[positions.length+texCoords.length];
         int index = 0;
         for (int i = 0, j = 0; i < positions.length; i += 6, j += 2) {
             combined[index++] = (positions[i]);     // x
@@ -59,7 +61,7 @@ public class Chunk {
             combined[index++] = (texCoords[j]);     // u
             combined[index++] = (texCoords[j + 1]); // v
         }
-        return combined;
+        return List.of(combined);
     }
 
     public enum FaceType {
@@ -179,16 +181,16 @@ public class Chunk {
 
         if (blockType == BlockType.SIDEDIRT) {
             opaqueVertsAmount += 6;
-            opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.GRASS), FaceType.TOP)));
+            opaqueVertList.addAll(combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.GRASS), FaceType.TOP)));
         } else if (blockType == BlockType.SIDESNOW) {
             opaqueVertsAmount += 6;
-            opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.SNOW), FaceType.TOP)));
+            opaqueVertList.addAll(combineVertexData(verts, getTextureCoords(blockTextures.get(BlockType.SNOW), FaceType.TOP)));
         } else if(isLiquid(blockType)){
             transVertsAmount += 6;
-            transBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
+            transVertList.addAll(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
         }  else {
             opaqueVertsAmount += 6;
-            opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
+            opaqueVertList.addAll(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), FaceType.TOP)));
         }
 
     }
@@ -336,7 +338,7 @@ public class Chunk {
              */
         } else {
             opaqueVertsAmount += 6;
-            opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), faceType)));
+            opaqueVertList.addAll(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), faceType)));
         }
 
     }
@@ -573,13 +575,13 @@ public class Chunk {
 
     public void generateMesh() {
 
-        if(opaqueBuffer != null){
+        if(opaqueVertArray != null){
             opaqueVAO = glGenVertexArrays();
             glBindVertexArray(opaqueVAO);
 
             opaqueVBO = glGenBuffers();
             glBindBuffer(GL_ARRAY_BUFFER, opaqueVBO);
-            glBufferData(GL_ARRAY_BUFFER, opaqueBuffer, GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, opaqueVertArray, GL_DYNAMIC_DRAW);
 
             // position attribute
             glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 0);
@@ -598,13 +600,13 @@ public class Chunk {
 
 
 
-        if(transBuffer != null) {
+        if(transVertArray != null) {
             transVAO = glGenVertexArrays();
             glBindVertexArray(transVAO);
 
             transVBO = glGenBuffers();
             glBindBuffer(GL_ARRAY_BUFFER, transVBO);
-            glBufferData(GL_ARRAY_BUFFER, transBuffer, GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, transVertArray, GL_DYNAMIC_DRAW);
 
             // position attribute
             glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * Float.BYTES, 0);
@@ -621,10 +623,11 @@ public class Chunk {
             glBindVertexArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-            byteBufferOpaque = null;
-            byteBufferTrans = null;
-            opaqueBuffer = null;
-            transBuffer = null;
+            transVertArray = null;
+            opaqueVertArray = null;
+            transVertList.clear();
+            opaqueVertList.clear();
+
         }
 
     }
@@ -634,18 +637,25 @@ public class Chunk {
 
     void generateData() {
 
-        // magic number allocation size
-        byteBufferOpaque = ByteBuffer.allocateDirect(12* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder()); // allocates more memory than needed
-        byteBufferTrans = ByteBuffer.allocateDirect(12* World.chunkSizeX*World.chunkSizeY*World.chunkSizeZ * Float.BYTES).order(ByteOrder.nativeOrder());
-        opaqueBuffer = byteBufferOpaque.asFloatBuffer();
-        transBuffer = byteBufferTrans.asFloatBuffer();
 
+        opaqueVertList = new ArrayList<>();
+        transVertList  = new ArrayList<>();
 
         faceCull();
 
-        opaqueBuffer.flip();
-        transBuffer.flip();
+        int i = 0;
+        opaqueVertArray = new float[opaqueVertList.size()];
+        for( Float vert : opaqueVertList){
+            opaqueVertArray[i] = vert;
+            i++;
+        }
+        i = 0;
 
+        transVertArray = new float[transVertList.size()];
+        for( Float vert : transVertList){
+            transVertArray[i] = vert;
+            i++;
+        }
     }
 
     private void faceCull(){
@@ -712,4 +722,13 @@ public class Chunk {
             opaqueVertsAmount = 0;
             transVertsAmount = 0;
         }
+
+        public void destroyObject(){
+        destroyMesh();
+            backChunk = null;
+            frontChunk = null;
+            rightChunk = null;
+            leftChunk = null;
+        }
+
     }

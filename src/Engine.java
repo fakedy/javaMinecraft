@@ -36,13 +36,15 @@ public class Engine {
             Time.setDeltaTime(elapsed / 1000.0);
             game.update();
 
+            /*
             while(lag >= MS_PER_UPDATE){
 
                 // update
-
                 //game.update();
                 lag -= MS_PER_UPDATE;
             }
+
+             */
 
 
             renderer.render();

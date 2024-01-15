@@ -1,10 +1,9 @@
-import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
 
-import java.lang.reflect.Array;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,11 +16,10 @@ import java.util.concurrent.*;
 public class World {
 
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    private final ConcurrentLinkedQueue<Chunk> chunkQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Chunk> chunkDataQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Chunk> chunkMeshQueue = new ConcurrentLinkedQueue<>();
 
     // List to keep track of Future objects
-
-
 
     // This is where we will create our world
     // This has become so messy
@@ -32,8 +30,8 @@ public class World {
 
     static int worldSizeY = 256;
 
-    static int worldSizeX = 16;
-    static int worldSizeZ = 16;
+    static int worldSizeX = 32;
+    static int worldSizeZ = 32;
 
     static int fogDist = ((chunkSizeX*worldSizeX)/2)-20;
     private int  delay = 0; // chunk generation delay, bad name ik
@@ -43,10 +41,8 @@ public class World {
     static ArrayList<Chunk> chunks = new ArrayList<>();
     Map<Vector3i, Chunk> chunkPosMap = new HashMap<>();
 
-    private ArrayList<Vector2i> chunkPosList = new ArrayList<>();
 
-    private Iterator<Chunk> nullNeighboursIterator;
-    private ArrayList<Chunk> nullNeighboursList = new ArrayList<>();
+    private final ArrayList<Chunk> nullNeighboursList = new ArrayList<>();
 
     Iterator<Chunk> iterator;
     // Let's make dumb and simple start
@@ -62,10 +58,9 @@ public class World {
 
     public void updateWorld(){
 
+        removeChunks();
         plyPos = Game.player.position;
         Vector3i chunkWorld = getChunkCoord(plyPos);
-
-        removeChunks();
 
 
             ArrayList<Future<?>> futures = new ArrayList<>();
@@ -74,13 +69,12 @@ public class World {
 
                     Vector3i chunkPosition = new Vector3i((x + chunkWorld.x) - (worldSizeX / 2), 0, (z + chunkWorld.z) - (worldSizeZ / 2));
 
-                    if (!chunkPosExists(new Vector2i(chunkPosition.x, chunkPosition.z))) {
-                        chunkPosList.add(new Vector2i(chunkPosition.x, chunkPosition.z));
+                    if (!chunkPosMap.containsKey(new Vector3i(chunkPosition.x,0 , chunkPosition.z))) {
 
                         synchronized (this) {
                             Future<?> future = executor.submit(() -> {
                                 Chunk chunk = new Chunk(chunkPosition);
-                                chunkQueue.offer(chunk); // Add to queue
+                                chunkDataQueue.offer(chunk); // Add to queue
                                 chunkPosMap.put(chunkPosition, chunk);
                             });
                             futures.add(future);
@@ -100,19 +94,11 @@ public class World {
 
         setNeighbours();
         processGeneratedChunks();
-        System.out.println(chunks.size());
+        //System.out.println(chunks.size());
         }
 
 
 
-
-        boolean chunkPosExists(Vector2i chunkPos){
-            for(Vector2i pos : chunkPosList){
-                if(chunkPos.equals(pos.x,pos.y))
-                    return true;
-            }
-        return false;
-    }
 
 
     void removeChunks(){
@@ -123,9 +109,9 @@ public class World {
             Chunk chunk = iterator.next();
             Vector2i chunkPosition = new Vector2i(chunk.position.x, chunk.position.z);
             if(Math.abs(chunkPosition.x - chunkWorld.x) > (worldSizeX/2) || (Math.abs(chunkPosition.y - chunkWorld.z)) > (worldSizeX/2)){
+                nullNeighboursList.remove(chunk);
                 chunkPosMap.remove(chunk.position);
-                chunkPosListemove(chunkPosition);
-                chunk.destroyMesh();
+                chunk.destroyObject();
                 iterator.remove();
             }
         }
@@ -135,7 +121,7 @@ public class World {
 
         // this is shit
 
-        for (Chunk chunk : chunkQueue){
+        for (Chunk chunk : chunkDataQueue){
 
             Vector3i origin = chunk.position;
 
@@ -167,13 +153,17 @@ public class World {
                 isNull = true;
             }
 
-            if(isNull)
+            if(isNull) {
                 nullNeighboursList.add(chunk);
+            } else {
+                chunkMeshQueue.offer(chunk);
+            }
+
         }
 
         // this is bad but needed at the moment.
 
-        nullNeighboursIterator = nullNeighboursList.iterator();
+        Iterator<Chunk> nullNeighboursIterator = nullNeighboursList.iterator();
 
         while (nullNeighboursIterator.hasNext()){
 
@@ -210,7 +200,8 @@ public class World {
             }
 
             if(!isNull) {
-                //chunk.update(); // causes crash ;D
+                chunkDataQueue.offer(chunk);
+                chunkMeshQueue.offer(chunk);
                 nullNeighboursIterator.remove();
             }
 
@@ -223,32 +214,34 @@ public class World {
     }
 
 
-    void chunkPosListemove(Vector2i chunkPos){
+    public void processGeneratedChunks() {
+        ArrayList<Future<?>> futures = new ArrayList<>();
 
-        ArrayList<Vector2i> tempList = new ArrayList<>();
-        for(Vector2i pos : chunkPosList){
-            if(chunkPos.equals(pos.x,pos.y)){
-
-            } else {
-                tempList.add(pos);
+        while(!chunkDataQueue.isEmpty()) {
+            Chunk chunk = chunkDataQueue.poll();
+            if (chunk != null) {
+                synchronized (this) {
+                    Future<?> future = executor.submit(chunk::generateData);
+                    futures.add(future);
+                }
+                chunks.add(chunk);
             }
-
         }
 
-        chunkPosList = tempList;
-
-    }
-
-    public void processGeneratedChunks() {
-        while(!chunkQueue.isEmpty()) {
-            Chunk chunk = chunkQueue.poll();
-            if (chunk != null) {
-                chunk.generateData();
-                chunk.generateMesh(); // OpenGL operations
-                chunks.add(chunk);
-                //sortChunks();
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+                } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
             }
+        }
 
+        createChunkMesh();
+    }
+    public void createChunkMesh(){
+        while(!chunkMeshQueue.isEmpty()) {
+            Chunk chunk = chunkMeshQueue.poll();
+            chunk.generateMesh(); // OpenGL operations
         }
     }
 
