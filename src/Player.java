@@ -74,13 +74,53 @@ public class Player {
             float stepSize = 0.2f;
             int maxSteps = 30;
 
-
+            Vector3i tempPos;
             for (int i = 0; i < maxSteps; i++) {
 
-                if (World.findChunkByPosition(currentPos.round(new Vector3f()))) {
-
-                    break;
+                tempPos = new Vector3i(Math.round(currentPos.x),Math.round(currentPos.y),Math.round(currentPos.z));
+                if (Utils.findChunkByPosition(tempPos) != null) {
+                    Chunk chunk = Utils.findChunkByPosition(tempPos);
+                    Vector3i pos = Utils.getBlockCoordWithinChunk(tempPos);
+                    if(Utils.removeBlock(chunk, pos))
+                        break;
                 }
+                currentPos = currentPos.add((rayDirection.mul(stepSize, new Vector3f())));
+
+            }
+
+        }
+
+        if (InputManager.mousePress(GLFW.GLFW_MOUSE_BUTTON_RIGHT)) {
+            // painful bad and nothing works :))
+
+
+            Blocks.BlockType block = Blocks.BlockType.PLANKS;
+            Vector3f rayOrigin = new Vector3f(position);
+            Vector3f rayDirection = camera.castRay().normalize();
+            Vector3f currentPos = rayOrigin;
+            float stepSize = 0.2f;
+            int maxSteps = 30;
+
+            Vector3f nextPos;
+            Vector3i nextPosInt;
+
+            Vector3i tempPos;
+            for (int i = 0; i < maxSteps; i++) {
+
+                nextPos = currentPos.add((rayDirection.mul(stepSize, new Vector3f())));    // ray's next pos in float
+                nextPosInt = new Vector3i(Math.round(nextPos.x),Math.round(nextPos.y),Math.round(nextPos.z));  // ray's next pos in int
+
+
+                tempPos = new Vector3i(Math.round(currentPos.x),Math.round(currentPos.y),Math.round(currentPos.z));     // where we actually are
+                Chunk chunk = Utils.findChunkByPosition(tempPos);
+                Vector3i pos = Utils.getBlockCoordWithinChunk(tempPos);
+                if(Utils.hitBlock(Utils.findChunkByPosition(nextPosInt), Utils.getBlockCoordWithinChunk(nextPosInt))) {
+                    System.out.println("next point: " + nextPosInt);
+                    System.out.println("current: " + pos);
+                    if (Utils.putBlock(chunk, pos, block))
+                        break;
+                }
+
                 currentPos = currentPos.add((rayDirection.mul(stepSize, new Vector3f())));
 
             }

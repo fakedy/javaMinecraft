@@ -36,7 +36,7 @@ public class World {
     static int fogDist = ((chunkSizeX*worldSizeX)/2)-20;
     private int  delay = 0; // chunk generation delay, bad name ik
 
-    private Vector3f plyPos;
+    private Vector3i plyPos;
 
     static ArrayList<Chunk> chunks = new ArrayList<>();
     Map<Vector3i, Chunk> chunkPosMap = new HashMap<>();
@@ -59,8 +59,8 @@ public class World {
     public void updateWorld(){
 
         removeChunks();
-        plyPos = Game.player.position;
-        Vector3i chunkWorld = getChunkCoord(plyPos);
+        plyPos = new Vector3i((int)Game.player.position.x, (int)Game.player.position.y, (int)Game.player.position.z);
+        Vector3i chunkWorld = Utils.getChunkCoord(plyPos);
 
 
             ArrayList<Future<?>> futures = new ArrayList<>();
@@ -102,8 +102,8 @@ public class World {
 
 
     void removeChunks(){
-        plyPos = Game.player.position;
-        Vector3i chunkWorld = getChunkCoord(plyPos);
+        plyPos = new Vector3i((int)Game.player.position.x, (int)Game.player.position.y, (int)Game.player.position.z);
+        Vector3i chunkWorld = Utils.getChunkCoord(plyPos);
         iterator = chunks.iterator();
         while(iterator.hasNext()){
             Chunk chunk = iterator.next();
@@ -248,86 +248,7 @@ public class World {
 
 
 
-    public static Vector3i getChunkCoord(Vector3f pos) {
-        int chunkCoordX = (int) Math.floor(pos.x / chunkSizeX);
-        //int chunkCoordY = (int) Math.floor(pos.y / chunkSizeY);
-        int chunkCoordY = 0;
-        int chunkCoordZ = (int) Math.floor(pos.z / chunkSizeZ);
 
-        return new Vector3i(chunkCoordX, chunkCoordY, chunkCoordZ);
-    }
-
-
-
-    public static Vector3i getBlockCoordWithinChunk(Vector3f pos) {
-        int blockCoordX = (int) pos.x % chunkSizeX;
-        int blockCoordY = (int) pos.y % worldSizeY;
-        int blockCoordZ = (int) pos.z % chunkSizeZ;
-
-        if (blockCoordX < 0) {
-            blockCoordX += chunkSizeX;
-        }
-        if (blockCoordY < 0) {
-            blockCoordY += worldSizeY;
-        }
-        if (blockCoordZ < 0) {
-            blockCoordZ += chunkSizeZ;
-        }
-
-        return new Vector3i(blockCoordX, blockCoordY, blockCoordZ);
-    }
-
-
-    static Chunk debug;
-
-    public static boolean findChunkByPosition(Vector3f position) {
-        for (Chunk chunk : chunks) {
-            if (chunk.position.equals(getChunkCoord(new Vector3f(position)))) {
-                Vector3i blockCoords = getBlockCoordWithinChunk(position);
-                //System.out.println(getBlockCoordWithinChunk(position));
-                int blockX = blockCoords.x;
-                int blockY = blockCoords.y;
-                int blockZ = blockCoords.z;
-                Blocks.BlockType block  = chunk.chunkData[blockX][blockY][blockZ];
-                /*
-                System.out.println(chunk.leftChunk + " left chunk");
-                System.out.println(chunk.rightChunk + " right chunk");
-                System.out.println(chunk.frontChunk + " front chunk");
-                System.out.println(chunk.backChunk + " back chunk");
-
-                 */
-                    //System.out.println("Checking block at: " + chunk.chunkData.get(blockX).get(blockZ).get(blockY));
-
-                if(block != Blocks.BlockType.AIR && block != Blocks.BlockType.BEDROCK && !Chunk.isLiquid(block) ){
-                    //System.out.println("removing block at: " + getBlockCoordWithinChunk(position));
-
-
-                    if(debug != null){
-                        if(!debug.equals(chunk)){
-                            System.out.println("Not same chunk");
-                            debug = chunk;
-                        }
-                    } else {
-                        debug = chunk;
-                    }
-                    chunk.chunkData[blockX][blockY][blockZ] = Blocks.BlockType.AIR;
-
-
-                    // clunky, have to update each chunks neighbour then update itself again.
-                    chunk.update();
-                    chunk.leftChunk.update();
-                    chunk.rightChunk.update();
-                    chunk.frontChunk.update();
-                    chunk.backChunk.update();
-                    chunk.update();
-
-
-                    return true;
-                }
-            }
-        }
-        return false;  // or throw an exception or handle this case as you see fit
-    }
 
 
 }
