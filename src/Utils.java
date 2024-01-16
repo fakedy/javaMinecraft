@@ -85,7 +85,7 @@ public class Utils {
         int blockZ = blockCoords.z;
         Blocks.BlockType block = chunk.chunkData[blockX][blockY][blockZ];
 
-        if (block != Blocks.BlockType.AIR && !Chunk.isLiquid(block)) {
+        if (!Chunk.isLiquid(block)) {
 
             chunk.chunkData[blockX][blockY][blockZ] = handBlock;
             // clunky, have to update each chunks neighbour then update itself again.

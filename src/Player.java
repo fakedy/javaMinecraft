@@ -91,8 +91,6 @@ public class Player {
         }
 
         if (InputManager.mousePress(GLFW.GLFW_MOUSE_BUTTON_RIGHT)) {
-            // painful bad and nothing works :))
-
 
             Blocks.BlockType block = Blocks.BlockType.PLANKS;
             Vector3f rayOrigin = new Vector3f(position);
@@ -101,30 +99,30 @@ public class Player {
             float stepSize = 0.2f;
             int maxSteps = 30;
 
-            Vector3f nextPos;
-            Vector3i nextPosInt;
+            Vector3f lastSafePos = new Vector3f(rayOrigin); // Track the last safe position before hitting a block
 
-            Vector3i tempPos;
             for (int i = 0; i < maxSteps; i++) {
+                Vector3f nextPos = currentPos.add(rayDirection.mul(stepSize, new Vector3f())); // Next position in float
+                Vector3i nextPosInt = new Vector3i(Math.round(nextPos.x), Math.round(nextPos.y), Math.round(nextPos.z)); // Next position in int
 
-                nextPos = currentPos.add((rayDirection.mul(stepSize, new Vector3f())));    // ray's next pos in float
-                nextPosInt = new Vector3i(Math.round(nextPos.x),Math.round(nextPos.y),Math.round(nextPos.z));  // ray's next pos in int
+                if (Utils.findChunkByPosition(nextPosInt) != null) {
+                    Chunk chunk = Utils.findChunkByPosition(nextPosInt);
+                    Vector3i blockPos = Utils.getBlockCoordWithinChunk(nextPosInt);
+                    if(Utils.hitBlock(chunk, blockPos)) {
+                        Vector3i lastSafePosInt = new Vector3i(Math.round(lastSafePos.x), Math.round(lastSafePos.y), Math.round(lastSafePos.z));
+                        chunk = Utils.findChunkByPosition(lastSafePosInt);
 
-
-                tempPos = new Vector3i(Math.round(currentPos.x),Math.round(currentPos.y),Math.round(currentPos.z));     // where we actually are
-                Chunk chunk = Utils.findChunkByPosition(tempPos);
-                Vector3i pos = Utils.getBlockCoordWithinChunk(tempPos);
-                if(Utils.hitBlock(Utils.findChunkByPosition(nextPosInt), Utils.getBlockCoordWithinChunk(nextPosInt))) {
-                    System.out.println("next point: " + nextPosInt);
-                    System.out.println("current: " + pos);
-                    if (Utils.putBlock(chunk, pos, block))
-                        break;
+                        // Place the block at the last safe position
+                        if (Utils.putBlock(chunk, lastSafePosInt, block)) {
+                            break;
+                        }
+                    } else {
+                        lastSafePos = new Vector3f(nextPos); // Update lastSafePos to the current position if no hit
+                    }
                 }
 
-                currentPos = currentPos.add((rayDirection.mul(stepSize, new Vector3f())));
-
+                currentPos = nextPos; // Move the current position to the next position
             }
-
         }
 
 
