@@ -1,3 +1,2 @@
-Project I speedran before and during the first week of java course at university.
-
+Project I started before first java course at university. Main hobby project.
 javaMinecraft :)
