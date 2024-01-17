@@ -61,7 +61,7 @@ public class Blocks {
 
 
 
-    public static float[] getTextureCoords(TextureCoords cords, Chunk.FaceType faceType) {
+    public static float[] getTextureCoords(TextureCoords cords, ChunkMesh.FaceType faceType) {
         float tileWidth = 1.0f / cords.tileAcross; // prob 16
         float startX = cords.x * tileWidth;
         float startY = cords.y * tileWidth;

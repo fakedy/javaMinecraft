@@ -92,6 +92,8 @@ public class Player {
 
         if (InputManager.mousePress(GLFW.GLFW_MOUSE_BUTTON_RIGHT)) {
 
+            // BUG placing blocks diagonally
+
             Blocks.BlockType block = Blocks.BlockType.PLANKS;
             Vector3f rayOrigin = new Vector3f(position);
             Vector3f rayDirection = camera.castRay().normalize();

@@ -44,6 +44,8 @@ public class World {
 
     private final ArrayList<Chunk> nullNeighboursList = new ArrayList<>();
 
+    long vertsCount = 0;
+
     Iterator<Chunk> iterator;
     // Let's make dumb and simple start
 
@@ -57,6 +59,8 @@ public class World {
     }
 
     public void updateWorld(){
+
+        System.out.println(vertsCount);
 
         removeChunks();
         plyPos = new Vector3i((int)Game.player.position.x, (int)Game.player.position.y, (int)Game.player.position.z);
@@ -111,13 +115,15 @@ public class World {
             if(Math.abs(chunkPosition.x - chunkWorld.x) > (worldSizeX/2) || (Math.abs(chunkPosition.y - chunkWorld.z)) > (worldSizeX/2)){
                 nullNeighboursList.remove(chunk);
                 chunkPosMap.remove(chunk.position);
+                vertsCount -= chunk.mesh.transVertsAmount;
+                vertsCount -= chunk.mesh.opaqueVertsAmount;
                 chunk.destroyObject();
                 iterator.remove();
             }
         }
     }
 
-    void setNeighbours(){
+    private void setNeighbours(){
 
         // this is shit
 
@@ -214,17 +220,22 @@ public class World {
     }
 
 
-    public void processGeneratedChunks() {
+    private void processGeneratedChunks() {
         ArrayList<Future<?>> futures = new ArrayList<>();
 
         while(!chunkDataQueue.isEmpty()) {
             Chunk chunk = chunkDataQueue.poll();
             if (chunk != null) {
+
                 synchronized (this) {
                     Future<?> future = executor.submit(chunk::generateData);
                     futures.add(future);
                 }
+
+
                 chunks.add(chunk);
+
+
             }
         }
 
@@ -238,10 +249,12 @@ public class World {
 
         createChunkMesh();
     }
-    public void createChunkMesh(){
+    private void createChunkMesh(){
         while(!chunkMeshQueue.isEmpty()) {
             Chunk chunk = chunkMeshQueue.poll();
-            chunk.generateMesh(); // OpenGL operations
+            chunk.mesh.generateMesh(); // OpenGL operations
+            vertsCount += chunk.mesh.opaqueVertsAmount;
+            vertsCount += chunk.mesh.transVertsAmount;
         }
     }
 

@@ -143,7 +143,8 @@ public class Terrain {
         }
 
 
-                /*
+
+        /*
         // Island
         if(noise3D < 20){
             chunkData[x][adjustedIslandY][z] = Blocks.BlockType.DIRT;
@@ -152,6 +153,8 @@ public class Terrain {
         }
 
          */
+
+
 
 
 

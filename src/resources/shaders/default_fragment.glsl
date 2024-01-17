@@ -64,8 +64,8 @@ void main()
     float fogFactor = get_fog_factor();
     vec4 color = texture(ourTexture, TexCoord).rgba;
     normal = normalize(Normal);
-    vec3 lightColor = vec3(1.0, 0.95, 0.8);
-    vec3 fogColor = vec3(0.0, 0.25, 0.25);
+    vec3 lightColor = vec3(0.6, 0.6, 0.6);
+    vec3 fogColor = vec3(0.6, 0.6, 0.6);
     // ambient
     vec3 ambient = 0.1 * lightColor; // indirect light
     // diffuse

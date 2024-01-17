@@ -66,7 +66,7 @@ public class Renderer {
 
 
         public void render(){
-            glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
 
@@ -119,11 +119,11 @@ public class Renderer {
         //glBindTexture(GL_TEXTURE_2D, 1);
         for (int i = 0; i < renderObjects.size(); i++){
 
-            glBindVertexArray(renderObjects.get(i).opaqueVAO);
+            glBindVertexArray(renderObjects.get(i).mesh.opaqueVAO);
 
             glEnable(GL_CULL_FACE);
             glDisable(GL_BLEND);
-            glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).opaqueVertsAmount);
+            glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).mesh.opaqueVertsAmount);
 
 
 
@@ -136,9 +136,9 @@ public class Renderer {
 
             glDisable(GL_CULL_FACE);
             glEnable(GL_BLEND);
-            glBindVertexArray(renderObjects.get(i).transVAO);
+            glBindVertexArray(renderObjects.get(i).mesh.transVAO);
 
-            glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).transVertsAmount);
+            glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).mesh.transVertsAmount);
 
 
         }
