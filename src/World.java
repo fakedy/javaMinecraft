@@ -60,7 +60,7 @@ public class World {
 
     public void updateWorld(){
 
-        System.out.println(vertsCount);
+        //System.out.println(vertsCount);
 
         removeChunks();
         plyPos = new Vector3i((int)Game.player.position.x, (int)Game.player.position.y, (int)Game.player.position.z);

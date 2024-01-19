@@ -1,29 +1,39 @@
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class Blocks {
 
 
-        static Map<BlockType, TextureCoords> blockTextures = new HashMap<>();
+        static Map<BlockType, Integer> blockTextures = new HashMap<>();
+
 
         static {
-            blockTextures.put(BlockType.GRASS, new TextureCoords(0, 0));
-            blockTextures.put(BlockType.STONE, new TextureCoords(1, 0));
-            blockTextures.put(BlockType.DIRT, new TextureCoords(2, 0));
-            blockTextures.put(BlockType.SIDEDIRT, new TextureCoords(3, 0));
-            blockTextures.put(BlockType.PLANKS, new TextureCoords(4, 0));
-            blockTextures.put(BlockType.COBBLESTONE, new TextureCoords(0, 1));
-            blockTextures.put(BlockType.WATER, new TextureCoords(14, 12));
-            blockTextures.put(BlockType.SNOW, new TextureCoords(2, 4));
-            blockTextures.put(BlockType.SIDESNOW, new TextureCoords(4, 4));
-            blockTextures.put(BlockType.BEDROCK, new TextureCoords(1, 1));
-            blockTextures.put(BlockType.SAND, new TextureCoords(2, 1));
-            blockTextures.put(BlockType.LAVA, new TextureCoords(15, 15));
-            blockTextures.put(BlockType.OBSIDIAN, new TextureCoords(5, 2));
-            blockTextures.put(BlockType.HELLSTONE, new TextureCoords(7, 6));
-            blockTextures.put(BlockType.RED_FLOWER, new TextureCoords(12, 0));
-            blockTextures.put(BlockType.YELLOW_FLOWER, new TextureCoords(13, 0));
+
+
+
+            // I dont like this but whatever
+
         }
+
+    public static void initBlocks() {
+
+        // this must be moved into Blocks as some kind of init world function or update textures
+        String[] blockNames = TextureLoader.readDirectoryFiles("src/resources/textures/block");
+        Blocks.BlockType block = null;
+        for(int i = 0; i < blockNames.length; i++){
+            for(Blocks.BlockType blockEnum : Blocks.BlockType.values()){
+                if(Objects.equals(blockNames[i], blockEnum.toString())){
+                    block = blockEnum;
+                    break;
+                }
+            }
+            if(block != null){
+                Blocks.blockTextures.put(block, i);
+            }
+            block = null;
+        }
+    }
 
 
     public enum BlockType {
@@ -31,7 +41,7 @@ public class Blocks {
         GRASS,
         DIRT,
         STONE,
-        SIDEDIRT,
+        SIDEGRASS,
         PLANKS,
         COBBLESTONE,
         WATER,
@@ -61,7 +71,7 @@ public class Blocks {
 
 
 
-    public static float[] getTextureCoords(TextureCoords cords, ChunkMesh.FaceType faceType) {
+    public static float[] getTextureCoordsFromAtlas(TextureCoords cords, ChunkMesh.FaceType faceType) {
         float tileWidth = 1.0f / cords.tileAcross; // prob 16
         float startX = cords.x * tileWidth;
         float startY = cords.y * tileWidth;
@@ -128,6 +138,79 @@ public class Blocks {
                         endX, endY,
                         startX, startY,
                         startX, endY
+                };
+            default:
+                return null; // or some default value
+        }
+    }
+
+    public static float[] getTextureCoords( BlockType blocktype , ChunkMesh.FaceType faceType, int lengthX, int lengthY, int lengthZ) {
+
+
+            int textureIndex = 0;
+            if(blockTextures.get(blocktype) != null){
+                if(blocktype == BlockType.DIRT && faceType == ChunkMesh.FaceType.TOP){
+                    textureIndex = blockTextures.get(BlockType.GRASS);
+                } else {
+                    textureIndex = blockTextures.get(blocktype);
+                }
+
+            }
+
+        switch (faceType) {
+            case TOP:
+                return new float[]{
+                        0.0f,           1.0f + lengthZ, textureIndex,
+                        1.0f + lengthX, 0.0f,           textureIndex,
+                        1.0f + lengthX, 1.0f + lengthZ, textureIndex,
+                        1.0f + lengthX, 0.0f,           textureIndex,
+                        0.0f,           1.0f + lengthZ, textureIndex,
+                        0.0f,           0.0f,           textureIndex,
+                };
+            case LEFT:
+                return new float[]{
+                        0.0f,           0.0f,           textureIndex,
+                        1.0f + lengthZ, 0.0f,           textureIndex,
+                        1.0f + lengthZ, 1.0f + lengthY, textureIndex,
+                        1.0f + lengthZ, 1.0f + lengthY, textureIndex,
+                        0.0f,           1.0f + lengthY, textureIndex,
+                        0.0f,           0.0f,           textureIndex,
+                };
+            case FRONT:
+                return new float[]{
+                        0.0f,           1.0f + lengthZ, textureIndex,
+                        1.0f + lengthX, 1.0f + lengthZ, textureIndex,
+                        1.0f + lengthX, 0.0f,           textureIndex,
+                        1.0f + lengthX, 0.0f,           textureIndex,
+                        0.0f,           0.0f,           textureIndex,
+                        0.0f,           1.0f + lengthZ, textureIndex,
+                };
+            case BACK:
+                return new float[]{
+                        1.0f + lengthX, 1.0f + lengthZ, textureIndex,
+                        0.0f,           0.0f,           textureIndex,
+                        0.0f,           1.0f,           textureIndex,
+                        0.0f,           0.0f,           textureIndex,
+                        1.0f + lengthX, 1.0f + lengthZ, textureIndex,
+                        1.0f + lengthX, 0.0f,           textureIndex,
+                };
+            case BOTTOM:
+                return new float[]{
+                        0.0f,           0.0f,           textureIndex,
+                        1.0f + lengthX, 0.0f,           textureIndex,
+                        1.0f + lengthX, 1.0f + lengthZ, textureIndex,
+                        1.0f + lengthX, 1.0f + lengthZ, textureIndex,
+                        0.0f,           1.0f + lengthZ, textureIndex,
+                        0.0f,           0.0f,           textureIndex,
+                };
+            case RIGHT:
+                return new float[]{
+                        0.0f,           0.0f,           textureIndex,
+                        1.0f + lengthZ, 1.0f + lengthY, textureIndex,
+                        1.0f + lengthZ, 0.0f,           textureIndex,
+                        1.0f + lengthZ, 1.0f + lengthY, textureIndex,
+                        0.0f,           0.0f,           textureIndex,
+                        0.0f,           1.0f + lengthY, textureIndex,
                 };
             default:
                 return null; // or some default value

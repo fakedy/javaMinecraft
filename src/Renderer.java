@@ -44,7 +44,10 @@ public class Renderer {
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_FRAMEBUFFER_SRGB);
-        test = TextureLoader.loadTexture("src/resources/textures/terrain.png");
+        //test = TextureLoader.loadTexture("src/resources/textures/terrain.png");
+
+        // Array texture testing
+        test = TextureLoader.loadArrayTextures("src/resources/textures/block");
 
 
         depthmap = new DepthMap();
@@ -77,7 +80,7 @@ public class Renderer {
             glBindFramebuffer(GL_FRAMEBUFFER, depthmap.depthMapFBO);
             glClear(GL_DEPTH_BUFFER_BIT);
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, test);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, test);
             configureShaderAndMatrices(shadowShader);
             renderScene();
             glCullFace(GL_BACK);
@@ -95,7 +98,7 @@ public class Renderer {
             renderSkybox();
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, test);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, test);
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, depthmap.depthMap);
 

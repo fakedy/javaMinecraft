@@ -1,12 +1,12 @@
-#version 330 core
+#version 460 core
 out vec4 FragColor;
 
-in vec2 TexCoord;
+in vec3 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
 in vec4 FragPosLightSpace;
 
-uniform sampler2D ourTexture;
+uniform sampler2DArray ourTexture;
 uniform sampler2D shadowMap;
 uniform vec3 lightPos;
 
@@ -62,7 +62,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 void main()
 {
     float fogFactor = get_fog_factor();
-    vec4 color = texture(ourTexture, TexCoord).rgba;
+    vec4 color = texture(ourTexture,TexCoord);
     normal = normalize(Normal);
     vec3 lightColor = vec3(0.6, 0.6, 0.6);
     vec3 fogColor = vec3(0.6, 0.6, 0.6);

@@ -4,13 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+
 import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
 
 public class ChunkMesh {
 
@@ -48,7 +43,7 @@ public class ChunkMesh {
     private Collection<? extends Float> combineVertexData(float[] positions, float[] texCoords) {
         Float[] combined = new Float[positions.length+texCoords.length];
         int index = 0;
-        for (int i = 0, j = 0; i < positions.length; i += 6, j += 2) {
+        for (int i = 0, j = 0; i < positions.length; i += 6, j += 3) {
             combined[index++] = (positions[i]);     // x
             combined[index++] = (positions[i + 1]); // y
             combined[index++] = (positions[i + 2]); // z
@@ -57,6 +52,7 @@ public class ChunkMesh {
             combined[index++] = (positions[i + 5]); // c
             combined[index++] = (texCoords[j]);     // u
             combined[index++] = (texCoords[j + 1]); // v
+            combined[index++] = (texCoords[j + 2]); // i
         }
         return List.of(combined);
     }
@@ -85,14 +81,14 @@ public class ChunkMesh {
             glBufferData(GL_ARRAY_BUFFER, opaqueVertArray, GL_DYNAMIC_DRAW);
 
             // position attribute
-            glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 0);
+            glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 9 * Float.BYTES, 0);
             glEnableVertexAttribArray(0);
 
             // normal attribute
-            glVertexAttribPointer(1, 3, GL33.GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
+            glVertexAttribPointer(1, 3, GL33.GL_FLOAT, false, 9 * Float.BYTES, 3 * Float.BYTES);
             glEnableVertexAttribArray(1);
-            // color attribute
-            glVertexAttribPointer(2, 2, GL33.GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
+            // texture attribute
+            glVertexAttribPointer(2, 3, GL33.GL_FLOAT, false, 9 * Float.BYTES, 6 * Float.BYTES);
             glEnableVertexAttribArray(2);
         }
 
@@ -105,14 +101,14 @@ public class ChunkMesh {
             glBufferData(GL_ARRAY_BUFFER, transVertArray, GL_DYNAMIC_DRAW);
 
             // position attribute
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * Float.BYTES, 0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 9 * Float.BYTES, 0);
             glEnableVertexAttribArray(0);
 
             // normal attribute
-            glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * Float.BYTES, 3 * Float.BYTES);
+            glVertexAttribPointer(1, 3, GL_FLOAT, false, 9 * Float.BYTES, 3 * Float.BYTES);
             glEnableVertexAttribArray(1);
             // color attribute
-            glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * Float.BYTES, 6 * Float.BYTES);
+            glVertexAttribPointer(2, 3, GL_FLOAT, false, 9 * Float.BYTES, 6 * Float.BYTES);
             glEnableVertexAttribArray(2);
 
 
@@ -297,7 +293,7 @@ public class ChunkMesh {
              */
         } else {
             opaqueVertsAmount += 6;
-            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(Blocks.blockTextures.get(blockType), faceType)));
+            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(blockType,faceType, lengthX, lengthY,lengthZ)));
         }
 
     }
@@ -341,25 +337,19 @@ public class ChunkMesh {
         // Generate the default verts array
 
 
-        if (blockType == Blocks.BlockType.SIDEDIRT) {
-            opaqueVertsAmount += 6;
-            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(Blocks.blockTextures.get(Blocks.BlockType.GRASS), ChunkMesh.FaceType.TOP)));
-        } else if (blockType == Blocks.BlockType.SIDESNOW) {
-            opaqueVertsAmount += 6;
-            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(Blocks.blockTextures.get(Blocks.BlockType.SNOW), ChunkMesh.FaceType.TOP)));
-        } else if(owner.isLiquid(blockType)){
+
+        if(owner.isLiquid(blockType)){
             transVertsAmount += 6;
-            transVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(Blocks.blockTextures.get(blockType), ChunkMesh.FaceType.TOP)));
+            transVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(blockType,ChunkMesh.FaceType.TOP, lengthX,lengthY,lengthZ)));
         }  else {
             opaqueVertsAmount += 6;
-            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(Blocks.blockTextures.get(blockType), ChunkMesh.FaceType.TOP)));
+            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(blockType,ChunkMesh.FaceType.TOP, lengthX,lengthY,lengthZ)));
 
         }
 
     }
 
     private void faceCull(){
-
 
 
         for (int y = 0; y < World.worldSizeY; y++) {

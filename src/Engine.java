@@ -1,4 +1,6 @@
 
+import java.util.Objects;
+
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 
 public class Engine {
@@ -25,6 +27,11 @@ public class Engine {
 
 
         InputManager inputManager = new InputManager(window.getWindowHandle());
+
+
+        Blocks.initBlocks();
+
+
         Game game = new Game(camera);
         game.start();
 

@@ -123,7 +123,7 @@ public class Terrain {
 
         // Ground
         if(adjustedY < 78)
-            chunkData[x][adjustedY][z] = Blocks.BlockType.SIDEDIRT;
+            chunkData[x][adjustedY][z] = Blocks.BlockType.DIRT;
 
         if (adjustedY < 64) {
             chunkData[x][adjustedY][z] = Blocks.BlockType.STONE;
