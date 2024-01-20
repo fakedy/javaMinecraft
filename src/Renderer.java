@@ -7,6 +7,7 @@ import org.lwjgl.opengl.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL46.*;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 public class Renderer {
@@ -16,13 +17,13 @@ public class Renderer {
     ShaderCompiler shader;
     ShaderCompiler defaultShader;
     ShaderCompiler skyboxShader;
-    ShaderCompiler shadowShader;
+    ShaderCompiler framebufferShader;
 
     static ArrayList<Chunk> renderObjects = new ArrayList<>();
     static Skybox skybox;
     int test;
 
-    DepthMap depthmap;
+    FrameBuffer framebuffer;
 
     Vector3f lightPos = new Vector3f(60f, 160.0f, 15.0f);
 
@@ -50,63 +51,66 @@ public class Renderer {
         test = TextureLoader.loadArrayTextures("src/resources/textures/block");
 
 
-        depthmap = new DepthMap();
+        framebuffer = new FrameBuffer();
         defaultShader = new ShaderCompiler("src/resources/shaders/default_vertex.glsl", "src/resources/shaders/default_fragment.glsl");
         skyboxShader = new ShaderCompiler("src/resources/shaders/skybox_vertex.glsl", "src/resources/shaders/skybox_fragment.glsl");
-        shadowShader = new ShaderCompiler("src/resources/shaders/shadow_vertex.glsl", "src/resources/shaders/shadow_fragment.glsl");
+        framebufferShader = new ShaderCompiler("src/resources/shaders/framebuffer_vertex.glsl", "src/resources/shaders/framebuffer_fragment.glsl");
+        glEnable(GL_STENCIL_TEST);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        glEnable(GL_DEPTH_TEST);
+
+
+        framebufferShader.use();
+        framebufferShader.setInt("screenTexture", 0);
+
         defaultShader.use();
         defaultShader.setInt("ourTexture", test);
-        defaultShader.setInt("shadowMap", 1);
+
+
 
         }
 
 
-
-
         public void render(){
+
+
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.frameBuffFBO);
+
+            glEnable(GL_DEPTH_TEST);
+
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // clear the framebuffer
+
+            glViewport(0, 0, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT);
+            framebuffer.update();
+
+            configureShaderAndMatricesSKybox();
+
+            renderSkybox();
 
 
-            // render to depth map
-
-            glCullFace(GL_FRONT);
-            glViewport(0, 0, depthmap.SHADOW_WIDTH, depthmap.SHADOW_HEIGHT);
-            glBindFramebuffer(GL_FRAMEBUFFER, depthmap.depthMapFBO);
-            glClear(GL_DEPTH_BUFFER_BIT);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D_ARRAY, test);
-            configureShaderAndMatrices(shadowShader);
+            configureShaderAndMatrices(defaultShader);
             renderScene();
-            glCullFace(GL_BACK);
+
+
+            // render quad
+
+
+
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-            // render normally
+            glDisable(GL_DEPTH_TEST);
+            glClear(GL_COLOR_BUFFER_BIT);
 
-            glViewport(0, 0, window.WINDOW_WIDTH, window.WINDOW_HEIGHT); // not working
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-
-            configureShaderAndMatricesSKybox();
-            renderSkybox();
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D_ARRAY, test);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, depthmap.depthMap);
-
-
-            configureShaderAndMatrices(defaultShader);
-
-            renderScene();
-
+            framebufferShader.use();
+            glBindVertexArray(framebuffer.quadVAO);
+            glBindTexture(GL_TEXTURE_2D, framebuffer.texture);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
             glfwSwapBuffers(window.windowHandle); // swap the color buffers
@@ -117,8 +121,6 @@ public class Renderer {
     }
 
     void renderScene(){
-
-
         //glBindTexture(GL_TEXTURE_2D, 1);
         for (int i = 0; i < renderObjects.size(); i++){
 
@@ -127,10 +129,6 @@ public class Renderer {
             glEnable(GL_CULL_FACE);
             glDisable(GL_BLEND);
             glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).mesh.opaqueVertsAmount);
-
-
-
-
 
         }
 
@@ -142,12 +140,7 @@ public class Renderer {
             glBindVertexArray(renderObjects.get(i).mesh.transVAO);
 
             glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).mesh.transVertsAmount);
-
-
         }
-
-
-
     }
 
     void renderSkybox(){
@@ -198,7 +191,6 @@ public class Renderer {
         Matrix4f lightSpaceMatrix = lightProjection.mul(lightView, new Matrix4f());
 
         shader.use();
-        shader.setInt("shadowMap", 1);
         shader.setInt("ourTexture", 0);
         shader.setMat4("projection", projectionMatrix);
         shader.setMat4("view", viewMatrix);

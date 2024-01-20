@@ -134,15 +134,12 @@ public class TextureLoader {
 
                 if(nrChannels.get() == 4){
                     glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, width.get(0), height.get(0), 1,  GL_RGBA, GL_UNSIGNED_BYTE, data);
-                    System.out.println(glGetError());
                 } else {
                     glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, width.get(0), height.get(0), 1,  GL_RGB, GL_UNSIGNED_BYTE, data);
-                    System.out.println(glGetError());
                 }
 
                 STBImage.stbi_image_free(data);
             }
-            System.out.println(texture);
             return texture;
         }
     }
@@ -180,7 +177,6 @@ public class TextureLoader {
 
         for(int i = 0; i < texturePaths.size(); i++){
             tempArr[i] = texturePaths.get(i);
-            System.out.println(tempArr[i]);
         }
 
         return tempArr;

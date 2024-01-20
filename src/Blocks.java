@@ -146,6 +146,8 @@ public class Blocks {
 
     public static float[] getTextureCoords( BlockType blocktype , ChunkMesh.FaceType faceType, int lengthX, int lengthY, int lengthZ) {
 
+        // should move this entire step into chunkMesh creation. right now i stitch it when it could be together from start.
+
 
             int textureIndex = 0;
             if(blockTextures.get(blocktype) != null){

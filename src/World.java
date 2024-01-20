@@ -58,6 +58,8 @@ public class World {
 
     }
 
+
+
     public void updateWorld(){
 
         //System.out.println(vertsCount);
@@ -72,18 +74,18 @@ public class World {
                 for (int z = 0; z < worldSizeZ; z++) {
 
                     Vector3i chunkPosition = new Vector3i((x + chunkWorld.x) - (worldSizeX / 2), 0, (z + chunkWorld.z) - (worldSizeZ / 2));
-
-                    if (!chunkPosMap.containsKey(new Vector3i(chunkPosition.x,0 , chunkPosition.z))) {
-
-                        synchronized (this) {
-                            Future<?> future = executor.submit(() -> {
-                                Chunk chunk = new Chunk(chunkPosition);
-                                chunkDataQueue.offer(chunk); // Add to queue
-                                chunkPosMap.put(chunkPosition, chunk);
-                            });
-                            futures.add(future);
+                        if (!chunkPosMap.containsKey(new Vector3i(chunkPosition.x, 0, chunkPosition.z)) && delay < 0) {
+                            synchronized (this) {
+                                Future<?> future = executor.submit(() -> {
+                                    Chunk chunk = new Chunk(chunkPosition);
+                                    chunkDataQueue.offer(chunk); // Add to queue
+                                    chunkPosMap.put(chunkPosition, chunk);
+                                });
+                                delay = 300;
+                                futures.add(future);
+                            }
                         }
-                    }
+                        delay--;
                 }
             }
 

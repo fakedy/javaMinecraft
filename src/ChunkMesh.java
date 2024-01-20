@@ -1,11 +1,10 @@
-import org.lwjgl.opengl.GL33;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL46.*;
 
 public class ChunkMesh {
 
@@ -81,14 +80,14 @@ public class ChunkMesh {
             glBufferData(GL_ARRAY_BUFFER, opaqueVertArray, GL_DYNAMIC_DRAW);
 
             // position attribute
-            glVertexAttribPointer(0, 3, GL33.GL_FLOAT, false, 9 * Float.BYTES, 0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 9 * Float.BYTES, 0);
             glEnableVertexAttribArray(0);
 
             // normal attribute
-            glVertexAttribPointer(1, 3, GL33.GL_FLOAT, false, 9 * Float.BYTES, 3 * Float.BYTES);
+            glVertexAttribPointer(1, 3, GL_FLOAT, false, 9 * Float.BYTES, 3 * Float.BYTES);
             glEnableVertexAttribArray(1);
             // texture attribute
-            glVertexAttribPointer(2, 3, GL33.GL_FLOAT, false, 9 * Float.BYTES, 6 * Float.BYTES);
+            glVertexAttribPointer(2, 3, GL_FLOAT, false, 9 * Float.BYTES, 6 * Float.BYTES);
             glEnableVertexAttribArray(2);
         }
 
