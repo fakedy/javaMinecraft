@@ -21,7 +21,6 @@ float fragDist = pow((pow((plyPos.x - FragPos.x), 2) + pow((plyPos.y - FragPos.y
 vec3 lightDirection = vec3(-0.5f, -1.0f, -0.5f);
 
 float get_fog_factor() {
-
     float nearplane = 0; // Where the fog starts
     float farplane =  fogDist; // where the max fog is reached
 
@@ -30,7 +29,6 @@ float get_fog_factor() {
     if (fragDist >= fogmax)discard; // fog edge
     //if (fragDist <= fogmin)return 0.0; // fog edge
     fragDist = clamp(fragDist, fogmin, fogmax);
-
     //return 0.0;
     return 1.0 - (fogmax - fragDist) / (fogmax - fogmin); // everything between the fog edges
 }
@@ -59,8 +57,5 @@ void main()
     vec3 specular = spec * lightColor;
     // calculate shadow
     vec4 lighting = vec4(ambient +    (1.0)* (diffuse + specular),1.0) * color;
-    // gamma correction
-    //float gamma = 2.2;
-    //lighting.rgb = pow(lighting, vec3(1.0/gamma));
     FragColor = mix(vec4(lighting), vec4(fogColor, 0.0), fogFactor);
 }

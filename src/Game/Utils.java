@@ -1,4 +1,5 @@
-import org.joml.Vector3f;
+package Game;
+
 import org.joml.Vector3i;
 
 public class Utils {

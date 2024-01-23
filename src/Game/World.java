@@ -1,5 +1,7 @@
+package Game;
+
+import Engine.Renderer.Renderer;
 import org.joml.Vector2i;
-import org.joml.Vector3f;
 import org.joml.Vector3i;
 
 
@@ -24,16 +26,16 @@ public class World {
     // This is where we will create our world
     // This has become so messy
 
-    static int chunkSizeX = 16;
-    static int chunkSizeZ = 16;
+    public static int chunkSizeX = 16;
+    public static int chunkSizeZ = 16;
     static int chunkSizeY = 64;
 
     static int worldSizeY = 256;
 
-    static int worldSizeX = 32;
+    public static int worldSizeX = 32;
     static int worldSizeZ = 32;
 
-    static int fogDist = ((chunkSizeX*worldSizeX)/2)-20;
+    public static int fogDist = ((chunkSizeX*worldSizeX)/2)-20;
     private int  delay = 0; // chunk generation delay, bad name ik
 
     private Vector3i plyPos;

@@ -1,18 +1,18 @@
+package Game;
+
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import java.util.Vector;
-
 public class Camera {
 
-    Vector3f position = new Vector3f(0.0f,0.0f,0.0f);
+    public Vector3f position = new Vector3f(0.0f,0.0f,0.0f);
     Vector3f front;
     Vector3f up;
     Vector3f right;
     Vector3f worldUp;
-    Matrix4f view = new Matrix4f();
-    Matrix4f proj = new Matrix4f();
+    public Matrix4f view = new Matrix4f();
+    public Matrix4f proj = new Matrix4f();
     float fieldOfView = 55.0f;
 
 

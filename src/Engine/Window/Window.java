@@ -1,3 +1,5 @@
+package Engine.Window;
+
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL33;
@@ -49,7 +51,7 @@ public class Window {
 
         // create window
         windowHandle = glfwCreateWindow(width, height, title, NULL,NULL);
-        // if Window doesn't create
+        // if Engine.Engine.Window.Window doesn't create
         if(windowHandle == NULL){
             throw new RuntimeException("Failed to create the GLFW window");
         }

@@ -1,4 +1,14 @@
+package Engine.Renderer;
 
+
+import Engine.InputManager;
+import Game.Camera;
+import Game.Chunk;
+import Engine.ShaderCompiler;
+import Game.Skybox;
+import Game.World;
+import Engine.TextureLoader;
+import Engine.Window.Window;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -19,8 +29,8 @@ public class Renderer {
     ShaderCompiler skyboxShader;
     ShaderCompiler framebufferShader;
 
-    static ArrayList<Chunk> renderObjects = new ArrayList<>();
-    static Skybox skybox;
+    public static ArrayList<Chunk> renderObjects = new ArrayList<>();
+    public static Skybox skybox;
     int test;
 
     FrameBuffer framebuffer;
@@ -45,7 +55,7 @@ public class Renderer {
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_FRAMEBUFFER_SRGB);
-        //test = TextureLoader.loadTexture("src/resources/textures/terrain.png");
+        //test = Engine.Engine.TextureLoader.loadTexture("src/resources/textures/terrain.png");
 
         // Array texture testing
         test = TextureLoader.loadArrayTextures("src/resources/textures/block");
@@ -159,22 +169,22 @@ public class Renderer {
         Matrix4f modelMatrix = new Matrix4f().identity();
         Matrix4f viewMatrix;
         viewMatrix = camera.view;
-        float near_plane = 0.1f, far_plane = World.worldSizeX*World.chunkSizeX;
-        Matrix4f lightProjection = new Matrix4f().ortho(-World.worldSizeX*World.chunkSizeX, World.worldSizeX*World.chunkSizeX, -World.worldSizeX*World.chunkSizeX, World.worldSizeX*World.chunkSizeX, near_plane, far_plane);
+        float near_plane = 0.1f, far_plane = World.worldSizeX* World.chunkSizeX;
+        Matrix4f lightProjection = new Matrix4f().ortho(-World.worldSizeX* World.chunkSizeX, World.worldSizeX* World.chunkSizeX, -World.worldSizeX* World.chunkSizeX, World.worldSizeX* World.chunkSizeX, near_plane, far_plane);
 
 
         lightPos = camera.position;
         /*
-        if(InputManager.keyDown(GLFW_KEY_UP)){
+        if(Engine.Engine.InputManager.keyDown(GLFW_KEY_UP)){
             lightPos.add(new Vector3f(0.1f,0.0f,0.0f));
         }
-        if(InputManager.keyDown(GLFW_KEY_DOWN)){
+        if(Engine.Engine.InputManager.keyDown(GLFW_KEY_DOWN)){
             lightPos.add(new Vector3f(-0.1f,0.0f,0.0f));
         }
-        if(InputManager.keyDown(GLFW_KEY_RIGHT)){
+        if(Engine.Engine.InputManager.keyDown(GLFW_KEY_RIGHT)){
             lightPos.add(new Vector3f(0.0f,0.0f,0.1f));
         }
-        if(InputManager.keyDown(GLFW_KEY_LEFT)){
+        if(Engine.Engine.InputManager.keyDown(GLFW_KEY_LEFT)){
             lightPos.add(new Vector3f(0.0f,0.0f,-0.1f));
         }
 
@@ -187,7 +197,7 @@ public class Renderer {
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
         }
 
-        Matrix4f lightView = new Matrix4f().lookAt(lightPos, new Vector3f(World.worldSizeX*World.chunkSizeX, 74.0f,  World.worldSizeX*World.chunkSizeZ), new Vector3f(0.0f, 1.0f,  0.0f));
+        Matrix4f lightView = new Matrix4f().lookAt(lightPos, new Vector3f(World.worldSizeX* World.chunkSizeX, 74.0f,  World.worldSizeX* World.chunkSizeZ), new Vector3f(0.0f, 1.0f,  0.0f));
         Matrix4f lightSpaceMatrix = lightProjection.mul(lightView, new Matrix4f());
 
         shader.use();

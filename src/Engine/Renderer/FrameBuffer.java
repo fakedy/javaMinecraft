@@ -1,3 +1,7 @@
+package Engine.Renderer;
+
+import Engine.Window.Window;
+import org.lwjgl.opengl.GL11;
 
 import static org.lwjgl.opengl.GL46.*;
 
@@ -43,7 +47,7 @@ public class FrameBuffer {
         // shadow resolution
         texture = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+        GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
@@ -64,7 +68,7 @@ public class FrameBuffer {
     void update(){
 
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+        GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);

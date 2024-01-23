@@ -1,3 +1,4 @@
+package Engine;
 
 import static org.lwjgl.opengl.GL46.*;
 import org.lwjgl.opengl.*;
@@ -52,7 +53,7 @@ public class TextureLoader {
 
     }
 
-    static void loadCubemap(String[] paths) {
+    public static void loadCubemap(String[] paths) {
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer width = stack.mallocInt(1);
@@ -95,7 +96,7 @@ public class TextureLoader {
         }
     }
 
-    static int loadArrayTextures(String textureDirectory){
+    public static int loadArrayTextures(String textureDirectory){
 
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -163,7 +164,7 @@ public class TextureLoader {
         return tempArr;
     }
 
-    static String[] readDirectoryFiles(String textureDirectory){
+    public static String[] readDirectoryFiles(String textureDirectory){
 
         ArrayList<String> texturePaths = new ArrayList<>();
 

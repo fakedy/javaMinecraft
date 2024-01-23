@@ -1,3 +1,5 @@
+package Engine;
+
 import org.lwjgl.glfw.*;
 import static org.lwjgl.glfw.GLFW.*;
 public class InputManager {
@@ -12,8 +14,8 @@ public class InputManager {
     private float lastY = 1080 / 2.0f;
     private boolean firstMouse = true;
 
-    static float xoffset = 0.0f;
-    static float yoffset = 0.0f;
+    public static float xoffset = 0.0f;
+    public static float yoffset = 0.0f;
 
     private boolean menu = false;
 

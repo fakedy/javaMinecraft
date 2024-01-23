@@ -1,3 +1,4 @@
+package Game;
 
 import org.joml.Vector3i;
 
@@ -11,7 +12,7 @@ public class Chunk {
     Chunk backChunk;
 
     Blocks.BlockType[][][] chunkData;
-    ChunkMesh mesh;
+    public ChunkMesh mesh;
     public Vector3i position;
 
     public Chunk(Vector3i position) {

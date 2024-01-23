@@ -1,6 +1,9 @@
+package Game;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import Engine.TextureLoader;
 
 public class Blocks {
 
@@ -18,7 +21,7 @@ public class Blocks {
 
     public static void initBlocks() {
 
-        // this must be moved into Blocks as some kind of init world function or update textures
+        // this must be moved into Game.Blocks as some kind of init world function or update textures
         String[] blockNames = TextureLoader.readDirectoryFiles("src/resources/textures/block");
         Blocks.BlockType block = null;
         for(int i = 0; i < blockNames.length; i++){

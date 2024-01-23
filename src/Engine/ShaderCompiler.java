@@ -1,3 +1,5 @@
+package Engine;
+
 import org.lwjgl.opengl.*;
 
 import java.io.File;
@@ -65,7 +67,7 @@ public class ShaderCompiler {
 
     }
 
-    void use(){
+    public void use(){
 
         glUseProgram(shaderProgram);
 
@@ -107,7 +109,7 @@ public class ShaderCompiler {
     void setVec2(String name, Vector2f value){
         glUniform2f(glGetUniformLocation(shaderProgram, name), value.x, value.y);
     }
-    void setVec3(String name, Vector3f value){
+    public void setVec3(String name, Vector3f value){
         glUniform3f(glGetUniformLocation(shaderProgram, name), value.x, value.y, value.z);
     }
 
@@ -117,7 +119,7 @@ public class ShaderCompiler {
         glUniformMatrix3fv(glGetUniformLocation(shaderProgram, name), false ,fb);
         stack.pop();
     }
-    void setMat4(String name, Matrix4f value){
+    public void setMat4(String name, Matrix4f value){
         MemoryStack stack = MemoryStack.stackPush();
         FloatBuffer fb = value.get(stack.mallocFloat(16));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name), false ,fb);

@@ -1,3 +1,6 @@
+package Game;
+
+import Engine.FastNoiseLite;
 import org.joml.Vector3i;
 
 public class Terrain {
@@ -177,24 +180,24 @@ public class Terrain {
 
         /*
         if (adjustedY < 64) {
-            chunkData[x][adjustedY][z] = Blocks.BlockType.STONE;
-            chunkData[x][y][z] = Blocks.BlockType.STONE;
+            chunkData[x][adjustedY][z] = Game.Blocks.BlockType.STONE;
+            chunkData[x][y][z] = Game.Blocks.BlockType.STONE;
 
-        } else if (y == World.chunkSizeY - 1 && adjustedY < 78) {
-            chunkData[x][adjustedY][z] = Blocks.BlockType.SIDEDIRT;
-        } else if (y == World.chunkSizeY - 1) {
-            chunkData[x][adjustedY][z] = Blocks.BlockType.SIDESNOW;
+        } else if (y == Game.World.chunkSizeY - 1 && adjustedY < 78) {
+            chunkData[x][adjustedY][z] = Game.Blocks.BlockType.SIDEDIRT;
+        } else if (y == Game.World.chunkSizeY - 1) {
+            chunkData[x][adjustedY][z] = Game.Blocks.BlockType.SIDESNOW;
         } else {
-            chunkData[x][adjustedY][z] = Blocks.BlockType.DIRT;
+            chunkData[x][adjustedY][z] = Game.Blocks.BlockType.DIRT;
         }
 
         // water
         if(noiseY < 5 && adjustedY > 62) {
-            chunkData[x][adjustedY][z] = Blocks.BlockType.SAND;
-            chunkData[x][adjustedY-1][z] = Blocks.BlockType.SAND;
+            chunkData[x][adjustedY][z] = Game.Blocks.BlockType.SAND;
+            chunkData[x][adjustedY-1][z] = Game.Blocks.BlockType.SAND;
             if(noiseY < 4){ // Fill with water
                 for(int i = 0; i < 5-noiseY; i++){
-                    chunkData[x][adjustedY+i][z] = Blocks.BlockType.WATER;
+                    chunkData[x][adjustedY+i][z] = Game.Blocks.BlockType.WATER;
                 }
 
             }
