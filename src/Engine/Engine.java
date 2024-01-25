@@ -3,7 +3,6 @@ package Engine;
 import Engine.Renderer.Renderer;
 import Engine.Window.Window;
 import Game.Blocks;
-import Game.Camera;
 import Game.Game;
 
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
@@ -25,9 +24,11 @@ public class Engine {
 
 
         Window window = new Window(1920,1080, "javaMinecraft");
-        Camera camera = new Camera();
-        Renderer renderer = new Renderer(window, camera);
+        Renderer renderer = new Renderer(window);
         renderer.setupRender();
+
+        Game game = new Game();
+        game.start();
 
 
 
@@ -36,9 +37,6 @@ public class Engine {
 
         Blocks.initBlocks();
 
-
-        Game game = new Game(camera);
-        game.start();
 
         while ( !glfwWindowShouldClose(window.getWindowHandle()) ) {
             double current = System.currentTimeMillis();

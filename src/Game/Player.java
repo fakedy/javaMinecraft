@@ -1,35 +1,41 @@
 package Game;
 
+import Engine.ECS.CameraComponent;
+import Engine.ECS.GameObject;
 import Engine.InputManager;
+import Engine.Renderer.Renderer;
 import Engine.Time;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 import org.lwjgl.glfw.*;
-public class Player {
+public class Player extends GameObject {
 
     // horrible code, horrible horrible horrible horrible horrible
 
-    Vector3f position = new Vector3f(0.0f,80.0f,0.0f);
-    Vector3f rotation;
-    Vector3f scale;
+    private Matrix4f view = new Matrix4f();
 
-    Vector3f front = new Vector3f(0.0f,0.0f,-1.0f);
-    Vector3f up = new Vector3f(0.0f,1.0f,0.0f);
-    Vector3f right = new Vector3f(1.0f,0.0f,0.0f);
-    Vector3f worldUp = new Vector3f(0.0f,1.0f,0.0f);
-    Matrix4f view = new Matrix4f();
-
-    Camera camera = Game.camera;
 
     // euler Angles
     float yaw = -90.0f;
     float pitch = 0.0f;
-    double speed = 65.0;
+    private double speed = 65.0;
     float sens =  0.1f;
 
 
+
+    Player(){
+        super();
+        cameraComponent = new CameraComponent(this);
+        Renderer.activeCamera = this.cameraComponent;
+        Renderer.player = this;
+        setPosition(new Vector3f(0.0f,80.0f,0.0f));
+
+    }
+
     public void update() {
+
+        cameraComponent.follow();
 
         double velocity = speed * Time.deltaTime();
         Vector3f tmp = new Vector3f();
@@ -66,14 +72,8 @@ public class Player {
 
         if (InputManager.mousePress(GLFW.GLFW_MOUSE_BUTTON_LEFT)) {
 
-            // need to cast ray and find out which block we hit and remove it
-            // determine chunk we hit,
-            // determine block
-
-            // march ray
-
             Vector3f rayOrigin = new Vector3f(position);
-            Vector3f rayDirection = camera.castRay().normalize();
+            Vector3f rayDirection = cameraComponent.castRay().normalize();
             Vector3f currentPos = rayOrigin;
             float stepSize = 0.2f;
             int maxSteps = 30;
@@ -100,7 +100,7 @@ public class Player {
 
             Blocks.BlockType block = Blocks.BlockType.PLANKS;
             Vector3f rayOrigin = new Vector3f(position);
-            Vector3f rayDirection = camera.castRay().normalize();
+            Vector3f rayDirection = cameraComponent.castRay().normalize();
             Vector3f currentPos = rayOrigin;
             float stepSize = 0.2f;
             int maxSteps = 30;
@@ -132,9 +132,6 @@ public class Player {
         }
 
 
-
-
-
         float mouseX = InputManager.xoffset*sens;
         float mouseY = InputManager.yoffset*sens;
 
@@ -155,7 +152,7 @@ public class Player {
 
 
 
-    void calculateCamera(){
+    private void calculateCamera(){
 
         Vector3f Front = new Vector3f();
         Front.x = (float) (Math.cos(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch)));

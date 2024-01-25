@@ -1,12 +1,11 @@
 package Engine.Renderer;
 
 
+import Engine.ECS.CameraComponent;
 import Engine.InputManager;
-import Game.Camera;
-import Game.Chunk;
+import Game.*;
 import Engine.ShaderCompiler;
 import Engine.Skybox;
-import Game.World;
 import Engine.TextureLoader;
 import Engine.Window.Window;
 import org.joml.Matrix3f;
@@ -22,7 +21,8 @@ import java.util.ArrayList;
 public class Renderer {
 
     Window window;
-    private Camera camera;
+    public static CameraComponent activeCamera;
+    public static Player player;
     ShaderCompiler shader;
     ShaderCompiler defaultShader;
     ShaderCompiler skyboxShader;
@@ -36,10 +36,8 @@ public class Renderer {
 
     Vector3f lightPos = new Vector3f(60f, 160.0f, 15.0f);
 
-    public Renderer(Window window, Camera camera){
+    public Renderer(Window window){
         this.window = window;
-        this.camera = camera;
-
     }
 
     public void setupRender (){
@@ -85,44 +83,49 @@ public class Renderer {
         public void render(){
 
 
-            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.frameBuffFBO);
-
-            glEnable(GL_DEPTH_TEST);
-
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // clear the framebuffer
-
-            glViewport(0, 0, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT);
-            framebuffer.update();
-
-            configureShaderAndMatricesSKybox();
-
-            renderSkybox();
+            if(activeCamera != null){
 
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D_ARRAY, test);
-            configureShaderAndMatrices(defaultShader);
-            renderScene();
+                glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.frameBuffFBO);
+
+                glEnable(GL_DEPTH_TEST);
+
+                glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // clear the framebuffer
+
+                glViewport(0, 0, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT);
+                framebuffer.update();
+
+                configureShaderAndMatricesSKybox();
+
+                renderSkybox();
 
 
-            // render quad
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D_ARRAY, test);
+                configureShaderAndMatrices(defaultShader);
+                renderScene();
+
+
+                // render quad
 
 
 
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-            glDisable(GL_DEPTH_TEST);
-            glClear(GL_COLOR_BUFFER_BIT);
+                glDisable(GL_DEPTH_TEST);
+                glClear(GL_COLOR_BUFFER_BIT);
 
-            framebufferShader.use();
-            glBindVertexArray(framebuffer.quadVAO);
-            glBindTexture(GL_TEXTURE_2D, framebuffer.texture);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+                framebufferShader.use();
+                glBindVertexArray(framebuffer.quadVAO);
+                glBindTexture(GL_TEXTURE_2D, framebuffer.texture);
+                glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
+        }
             glfwSwapBuffers(window.windowHandle); // swap the color buffers
+
 
             // Poll for window events. The key callback above will only be
             // invoked during this call.
@@ -164,15 +167,15 @@ public class Renderer {
     void configureShaderAndMatrices(ShaderCompiler shader){
 
         Matrix4f projectionMatrix;
-        projectionMatrix = camera.proj;
+        projectionMatrix = activeCamera.proj;
         Matrix4f modelMatrix = new Matrix4f().identity();
         Matrix4f viewMatrix;
-        viewMatrix = camera.view;
+        viewMatrix = activeCamera.view;
         float near_plane = 0.1f, far_plane = World.worldSizeX* World.chunkSizeX;
         Matrix4f lightProjection = new Matrix4f().ortho(-World.worldSizeX* World.chunkSizeX, World.worldSizeX* World.chunkSizeX, -World.worldSizeX* World.chunkSizeX, World.worldSizeX* World.chunkSizeX, near_plane, far_plane);
 
 
-        lightPos = camera.position;
+        lightPos = activeCamera.position;
         /*
         if(Engine.Engine.InputManager.keyDown(GLFW_KEY_UP)){
             lightPos.add(new Vector3f(0.1f,0.0f,0.0f));
@@ -204,7 +207,7 @@ public class Renderer {
         shader.setMat4("projection", projectionMatrix);
         shader.setMat4("view", viewMatrix);
         shader.setMat4("model", modelMatrix);
-        shader.setVec3("plyPos", camera.position);
+        shader.setVec3("plyPos", player.getPosition());
         shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
         shader.setVec3("lightPos", lightPos);
         shader.setInt("fogDist", World.fogDist);
@@ -214,9 +217,9 @@ public class Renderer {
     void configureShaderAndMatricesSKybox(){
 
         Matrix4f projectionMatrix;
-        projectionMatrix = camera.proj;
+        projectionMatrix = activeCamera.proj;
         Matrix4f viewMatrix;
-        viewMatrix = camera.view;
+        viewMatrix = activeCamera.view;
 
         skyboxShader.use();
         Matrix4f skyboxViewMatrix = new Matrix4f(viewMatrix);  // Create a copy of the viewMatrix
@@ -225,7 +228,7 @@ public class Renderer {
 
         skyboxShader.setMat4("view", skyboxViewMatrix);
         skyboxShader.setMat4("projection", projectionMatrix);
-        skyboxShader.setVec3("plyPos", camera.position);
+        skyboxShader.setVec3("plyPos", player.getPosition());
     }
 
 

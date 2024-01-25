@@ -78,7 +78,7 @@ public class World {
 
 
     private void spawnChunks(){
-        plyPos = new Vector3i((int)Game.player.position.x, (int)Game.player.position.y, (int)Game.player.position.z);
+        plyPos = new Vector3i((int)Game.player.getPosition().x, (int)Game.player.getPosition().y, (int)Game.player.getPosition().z);
         Vector3i chunkWorld = Utils.getChunkCoord(plyPos);
 
 
@@ -113,7 +113,7 @@ public class World {
     }
 
     private void removeChunks(){
-        plyPos = new Vector3i((int)Game.player.position.x, (int)Game.player.position.y, (int)Game.player.position.z);
+        plyPos = new Vector3i((int)Game.player.getPosition().x, (int)Game.player.getPosition().y, (int)Game.player.getPosition().z);
         Vector3i chunkWorld = Utils.getChunkCoord(plyPos);
         iterator = chunks.iterator();
         while(iterator.hasNext()){

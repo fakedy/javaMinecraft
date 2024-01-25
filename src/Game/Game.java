@@ -2,13 +2,11 @@ package Game;
 
 public class Game {
 
-    public static Camera camera;
     public static Player player;
 
     private World world;
 
-    public Game(Camera camera){
-        this.camera = camera;
+    public Game(){
     }
 
 
@@ -23,8 +21,6 @@ public class Game {
     public void update(){
 
         player.update();
-        camera.Follow(player);
-        camera.update();
         world.updateWorld();
 
     }
