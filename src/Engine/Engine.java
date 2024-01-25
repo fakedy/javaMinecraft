@@ -4,7 +4,6 @@ import Engine.Renderer.Renderer;
 import Engine.Window.Window;
 import Game.Blocks;
 import Game.Camera;
-import Game.Time;
 import Game.Game;
 
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;

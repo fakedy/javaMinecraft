@@ -52,7 +52,7 @@ public class Utils {
     }
 
 
-    static boolean removeBlock(Chunk chunk, Vector3i blockPos){
+    public static boolean removeBlock(Chunk chunk, Vector3i blockPos){
 
         Vector3i blockCoords = getBlockCoordWithinChunk(blockPos);
 
@@ -77,7 +77,7 @@ public class Utils {
         }
     }
 
-    static boolean putBlock(Chunk chunk, Vector3i blockPos, Blocks.BlockType handBlock) {
+    public static boolean putBlock(Chunk chunk, Vector3i blockPos, Blocks.BlockType handBlock) {
 
         Vector3i blockCoords = getBlockCoordWithinChunk(blockPos);
 
@@ -103,7 +103,7 @@ public class Utils {
 
 
     }
-    static boolean hitBlock(Chunk chunk, Vector3i blockPos){
+    public static boolean hitBlock(Chunk chunk, Vector3i blockPos){
         Vector3i blockCoords = getBlockCoordWithinChunk(blockPos);
 
         int blockX = blockCoords.x;

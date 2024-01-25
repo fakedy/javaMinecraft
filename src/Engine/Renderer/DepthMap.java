@@ -6,7 +6,7 @@ import org.lwjgl.opengl.*;
 
 public class DepthMap {
 
-
+// not used
 
     public int depthMapFBO;
     public int SHADOW_WIDTH = 8172, SHADOW_HEIGHT = 8172;

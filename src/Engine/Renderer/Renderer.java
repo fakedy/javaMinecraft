@@ -5,7 +5,7 @@ import Engine.InputManager;
 import Game.Camera;
 import Game.Chunk;
 import Engine.ShaderCompiler;
-import Game.Skybox;
+import Engine.Skybox;
 import Game.World;
 import Engine.TextureLoader;
 import Engine.Window.Window;
@@ -17,7 +17,6 @@ import org.lwjgl.opengl.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL46.*;
 
-import java.awt.*;
 import java.util.ArrayList;
 
 public class Renderer {

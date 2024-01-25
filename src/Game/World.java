@@ -1,6 +1,7 @@
 package Game;
 
 import Engine.Renderer.Renderer;
+import Engine.Skybox;
 import org.joml.Vector2i;
 import org.joml.Vector3i;
 
@@ -46,7 +47,7 @@ public class World {
 
     private final ArrayList<Chunk> nullNeighboursList = new ArrayList<>();
 
-    long vertsCount = 0;
+    private long vertsCount = 0;
 
     Iterator<Chunk> iterator;
     // Let's make dumb and simple start
@@ -56,8 +57,6 @@ public class World {
         Renderer.renderObjects = chunks;
         Skybox sky = new Skybox();
         Renderer.skybox = sky;
-
-
     }
 
 
@@ -67,37 +66,7 @@ public class World {
         //System.out.println(vertsCount);
 
         removeChunks();
-        plyPos = new Vector3i((int)Game.player.position.x, (int)Game.player.position.y, (int)Game.player.position.z);
-        Vector3i chunkWorld = Utils.getChunkCoord(plyPos);
-
-
-            ArrayList<Future<?>> futures = new ArrayList<>();
-            for (int x = 0; x < worldSizeX; x++) {
-                for (int z = 0; z < worldSizeZ; z++) {
-
-                    Vector3i chunkPosition = new Vector3i((x + chunkWorld.x) - (worldSizeX / 2), 0, (z + chunkWorld.z) - (worldSizeZ / 2));
-                        if (!chunkPosMap.containsKey(new Vector3i(chunkPosition.x, 0, chunkPosition.z)) && delay < 0) {
-                            synchronized (this) {
-                                Future<?> future = executor.submit(() -> {
-                                    Chunk chunk = new Chunk(chunkPosition);
-                                    chunkDataQueue.offer(chunk); // Add to queue
-                                    chunkPosMap.put(chunkPosition, chunk);
-                                });
-                                delay = 300;
-                                futures.add(future);
-                            }
-                        }
-                        delay--;
-                }
-            }
-
-            for (Future<?> future : futures) {
-                try {
-                    future.get();
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                }
-            }
+        spawnChunks();
 
 
         setNeighbours();
@@ -108,8 +77,42 @@ public class World {
 
 
 
+    private void spawnChunks(){
+        plyPos = new Vector3i((int)Game.player.position.x, (int)Game.player.position.y, (int)Game.player.position.z);
+        Vector3i chunkWorld = Utils.getChunkCoord(plyPos);
 
-    void removeChunks(){
+
+        ArrayList<Future<?>> futures = new ArrayList<>();
+        for (int x = 0; x < worldSizeX; x++) {
+            for (int z = 0; z < worldSizeZ; z++) {
+
+                Vector3i chunkPosition = new Vector3i((x + chunkWorld.x) - (worldSizeX / 2), 0, (z + chunkWorld.z) - (worldSizeZ / 2));
+                if (!chunkPosMap.containsKey(new Vector3i(chunkPosition.x, 0, chunkPosition.z)) && delay < 0) {
+                    synchronized (this) {
+                        Future<?> future = executor.submit(() -> {
+                            Chunk chunk = new Chunk(chunkPosition);
+                            chunkDataQueue.offer(chunk); // Add to queue
+                            chunkPosMap.put(chunkPosition, chunk);
+                        });
+                        delay = 300;
+                        futures.add(future);
+                    }
+                }
+                delay--;
+            }
+        }
+
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private void removeChunks(){
         plyPos = new Vector3i((int)Game.player.position.x, (int)Game.player.position.y, (int)Game.player.position.z);
         Vector3i chunkWorld = Utils.getChunkCoord(plyPos);
         iterator = chunks.iterator();

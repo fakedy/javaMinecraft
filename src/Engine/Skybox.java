@@ -1,4 +1,4 @@
-package Game;
+package Engine;
 
 import org.lwjgl.opengl.GL33;
 import Engine.TextureLoader;
