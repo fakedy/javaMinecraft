@@ -11,6 +11,9 @@ public class CameraComponent {
 
     public Vector3f position = new Vector3f(0.0f,80.0f,0.0f);
 
+    public float yaw = -90f;
+    public float pitch = 0;
+
     public Matrix4f view = new Matrix4f();
 
     public Matrix4f proj = new Matrix4f();
@@ -47,6 +50,19 @@ public class CameraComponent {
         Matrix4f inverseView =  view.invert(new Matrix4f());
         Vector4f rayWorld = inverseView.transform(new Vector4f(rayEye.x, rayEye.y, rayEye.z,0.0f)).normalize();
         return new Vector3f(rayWorld.x,rayWorld.y,rayWorld.z);
+    }
+
+     public void calculateCamera(){
+
+        Vector3f Front = new Vector3f();
+        Front.x = (float) (Math.cos(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch)));
+        Front.y = (float) (Math.sin(Math.toRadians(pitch)));
+        Front.z = (float) (Math.sin(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch)));
+        owner.front = Front.normalize();
+
+        owner.right = owner.front.cross(owner.worldUp, new Vector3f()).normalize();
+        owner.up = owner.right.cross(owner.front, new Vector3f()).normalize();
+
     }
 
 

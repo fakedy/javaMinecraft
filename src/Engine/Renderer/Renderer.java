@@ -36,6 +36,8 @@ public class Renderer {
 
     Vector3f lightPos = new Vector3f(60f, 160.0f, 15.0f);
 
+    SSBO ssbo;
+
     public Renderer(Window window){
         this.window = window;
     }
@@ -71,9 +73,13 @@ public class Renderer {
 
         framebufferShader.use();
         framebufferShader.setInt("screenTexture", 0);
+        framebufferShader.setInt("depthTexture", 1);
 
         defaultShader.use();
         defaultShader.setInt("ourTexture", test);
+
+
+        ssbo = new SSBO();
 
 
 
@@ -85,7 +91,6 @@ public class Renderer {
 
             if(activeCamera != null){
 
-
                 glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.frameBuffFBO);
 
                 glEnable(GL_DEPTH_TEST);
@@ -94,7 +99,7 @@ public class Renderer {
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // clear the framebuffer
 
                 glViewport(0, 0, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT);
-                framebuffer.update();
+
 
                 configureShaderAndMatricesSKybox();
 
@@ -119,7 +124,12 @@ public class Renderer {
 
                 framebufferShader.use();
                 glBindVertexArray(framebuffer.quadVAO);
+                glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, framebuffer.texture);
+
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, framebuffer.depthTexture);
+
                 glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
@@ -133,10 +143,13 @@ public class Renderer {
     }
 
     void renderScene(){
-        //glBindTexture(GL_TEXTURE_2D, 1);
+
         for (int i = 0; i < renderObjects.size(); i++){
 
+
+
             glBindVertexArray(renderObjects.get(i).mesh.opaqueVAO);
+            ssbo.bufferData(renderObjects.get(i).mesh.opaqueVBO);
 
             glEnable(GL_CULL_FACE);
             glDisable(GL_BLEND);
@@ -144,8 +157,8 @@ public class Renderer {
 
         }
 
-        //glBindTexture(GL_TEXTURE_2D, 1);
         for (int i = 0; i < renderObjects.size(); i++){
+
 
             glDisable(GL_CULL_FACE);
             glEnable(GL_BLEND);
@@ -153,6 +166,7 @@ public class Renderer {
 
             glDrawArrays(GL_TRIANGLES, 0, renderObjects.get(i).mesh.transVertsAmount);
         }
+
     }
 
     void renderSkybox(){

@@ -13,12 +13,8 @@ public class Player extends GameObject {
 
     // horrible code, horrible horrible horrible horrible horrible
 
-    private Matrix4f view = new Matrix4f();
 
 
-    // euler Angles
-    float yaw = -90.0f;
-    float pitch = 0.0f;
     private double speed = 65.0;
     float sens =  0.1f;
 
@@ -135,34 +131,21 @@ public class Player extends GameObject {
         float mouseX = InputManager.xoffset*sens;
         float mouseY = InputManager.yoffset*sens;
 
-        yaw   = mouseX;
-        pitch = mouseY;
+        cameraComponent.yaw   = mouseX;
+        cameraComponent.pitch = mouseY;
 
         // make sure that when pitch is out of bounds, screen doesn't get flipped
         if (true) {
-            if (pitch > 89.0f)
-                pitch = 89.0f;
-            if (pitch < -89.0f)
-                pitch = -89.0f;
+            if (cameraComponent.pitch > 89.0f)
+                cameraComponent.pitch = 89.0f;
+            if (cameraComponent.pitch < -89.0f)
+                cameraComponent.pitch = -89.0f;
 
         }
-        calculateCamera();
+        cameraComponent.calculateCamera();
 
     }
 
 
-
-    private void calculateCamera(){
-
-        Vector3f Front = new Vector3f();
-        Front.x = (float) (Math.cos(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch)));
-        Front.y = (float) (Math.sin(Math.toRadians(pitch)));
-        Front.z = (float) (Math.sin(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch)));
-        front = Front.normalize();
-
-        right = front.cross(worldUp, new Vector3f()).normalize();
-        up = right.cross(front, new Vector3f()).normalize();
-
-    }
 
 }

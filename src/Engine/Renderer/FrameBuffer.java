@@ -1,7 +1,7 @@
 package Engine.Renderer;
 
 import Engine.Window.Window;
-import org.lwjgl.opengl.GL11;
+
 
 import static org.lwjgl.opengl.GL46.*;
 
@@ -14,6 +14,8 @@ public class FrameBuffer {
 
     public int rbo;
     public int texture;
+
+    public int depthTexture;
 
     float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
             // positions   // texCoords
@@ -44,19 +46,31 @@ public class FrameBuffer {
         frameBuffFBO = glGenFramebuffers();
         glBindFramebuffer(GL_FRAMEBUFFER, frameBuffFBO);
 
-        // shadow resolution
+
         texture = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, texture);
-        GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 
+        depthTexture = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
 
+
+        /*
         rbo = glGenRenderbuffers();
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+         */
 
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             System.out.println("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
@@ -65,14 +79,5 @@ public class FrameBuffer {
 
     }
 
-    void update(){
 
-        glBindTexture(GL_TEXTURE_2D, texture);
-        GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    }
 }
