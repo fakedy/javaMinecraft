@@ -20,10 +20,9 @@ import java.util.ArrayList;
 
 public class Renderer {
 
-    Window window;
+    private Window window;
     public static CameraComponent activeCamera;
     public static Player player;
-    ShaderCompiler shader;
     ShaderCompiler defaultShader;
     ShaderCompiler skyboxShader;
     ShaderCompiler framebufferShader;
@@ -134,7 +133,7 @@ public class Renderer {
 
 
         }
-            glfwSwapBuffers(window.windowHandle); // swap the color buffers
+            glfwSwapBuffers(window.getWindowHandle()); // swap the color buffers
 
 
             // Poll for window events. The key callback above will only be

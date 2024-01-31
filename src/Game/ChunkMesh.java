@@ -29,7 +29,7 @@ public class ChunkMesh {
 
     private int[][][] processedFaces;
 
-    Chunk owner;
+    private final Chunk owner;
 
 
 
@@ -153,11 +153,11 @@ public class ChunkMesh {
 
     private void generateFace(int x, int y, int z, FaceType faceType, int lengthX, int lengthY, int lengthZ){
 
-        Blocks.BlockType blockType = owner.chunkData[(x - (World.chunkSizeX * owner.position.x))][y][(z - (World.chunkSizeZ * owner.position.z))];
+        Blocks.BlockType blockType = owner.chunkData[(x - (World.chunkSizeX * owner.getPosition().x))][y][(z - (World.chunkSizeZ * owner.getPosition().z))];
 
         float[] verts = new float[36];
 
-        if((Chunk.isLiquid(blockType)) && owner.chunkData[(x - (World.chunkSizeX * owner.position.x))][y+1][(z - (World.chunkSizeZ * owner.position.z))] == Blocks.BlockType.AIR){ // no reason to have this atm but maybe in future.
+        if((Chunk.isLiquid(blockType)) && owner.chunkData[(x - (World.chunkSizeX * owner.getPosition().x))][y+1][(z - (World.chunkSizeZ * owner.getPosition().z))] == Blocks.BlockType.AIR){ // no reason to have this atm but maybe in future.
             switch (faceType) {
 
                 case FRONT:
@@ -285,7 +285,7 @@ public class ChunkMesh {
 
 
 
-        if(owner.isLiquid(blockType)){ // disabled water because why would we need water sides atm aaaaaaaaaaaaaaaaaaaa
+        if(Chunk.isLiquid(blockType)){ // disabled water because we dont render water sides at the moment.
             /*
             transVertsAmount += 6;
             opaqueBuffer.put(combineVertexData(verts, getTextureCoords(blockTextures.get(blockType), faceType)));
@@ -303,9 +303,9 @@ public class ChunkMesh {
 
         float[] verts;
 
-        Blocks.BlockType blockType = owner.chunkData[x - (World.chunkSizeX * owner.position.x)][y][z - (World.chunkSizeZ * owner.position.z)];
+        Blocks.BlockType blockType = owner.chunkData[x - (World.chunkSizeX * owner.getPosition().x)][y][z - (World.chunkSizeZ * owner.getPosition().z)];
 
-        if((blockType == Blocks.BlockType.WATER || blockType == Blocks.BlockType.LAVA) && owner.chunkData[(x - (World.chunkSizeX * owner.position.x))][y+1][((z - (World.chunkSizeZ * owner.position.z)))] == Blocks.BlockType.AIR) {
+        if((blockType == Blocks.BlockType.WATER || blockType == Blocks.BlockType.LAVA) && owner.chunkData[(x - (World.chunkSizeX * owner.getPosition().x))][y+1][((z - (World.chunkSizeZ * owner.getPosition().z)))] == Blocks.BlockType.AIR) {
 
             verts = new float[]{
                     -0.5f + x, y + 0.35f, -0.5f + z, 0.0f, 1.0f, 0.0f,// top-left
@@ -338,7 +338,7 @@ public class ChunkMesh {
 
 
 
-        if(owner.isLiquid(blockType)){
+        if(Chunk.isLiquid(blockType)){
             transVertsAmount += 6;
             transVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(blockType,ChunkMesh.FaceType.TOP, lengthX,lengthY,lengthZ)));
         }  else {
@@ -392,8 +392,8 @@ public class ChunkMesh {
 
         final int TOP_FACE = 16;    // 10000
         if((processedFaces[x][y][z] & TOP_FACE) == 0){
-            int xPos = x + (World.chunkSizeX * owner.position.x); // local to world cords
-            int zPos = z + (World.chunkSizeZ * owner.position.z); // local to world cords
+            int xPos = x + (World.chunkSizeX * owner.getPosition().x); // local to world cords
+            int zPos = z + (World.chunkSizeZ * owner.getPosition().z); // local to world cords
 
             int lengthX = 0; // set at 0 because if we on first block we shouldnt add.
 
@@ -448,8 +448,8 @@ public class ChunkMesh {
 
         final int BOTTOM_FACE = 32;    // 100000
         if((processedFaces[x][y][z] & BOTTOM_FACE) == 0){
-            int xPos = x + (World.chunkSizeX * owner.position.x); // local to world cords
-            int zPos = z + (World.chunkSizeZ * owner.position.z); // local to world cords
+            int xPos = x + (World.chunkSizeX * owner.getPosition().x); // local to world cords
+            int zPos = z + (World.chunkSizeZ * owner.getPosition().z); // local to world cords
 
             int lengthX = 0; // set at 0 because if we on first block we shouldnt add.
 
@@ -495,7 +495,7 @@ public class ChunkMesh {
                 }
             }
 
-            generateFace(xPos, y, zPos, FaceType.BOTTOM,lengthX+0 ,0,lengthZ+0);   // generate face from xPos to xPos + lengthX same with z
+            generateFace(xPos, y, zPos, FaceType.BOTTOM,lengthX ,0,lengthZ);   // generate face from xPos to xPos + lengthX same with z
             for(int i = 0; i <= lengthX; i++){
                 for(int j = 0; j <= lengthZ; j++){
                     processedFaces[x + i][y][z+j] |= BOTTOM_FACE;
@@ -508,8 +508,8 @@ public class ChunkMesh {
 
         final int FRONT_FACE = 4;    // 00001
         if((processedFaces[x][y][z] & FRONT_FACE) == 0) {
-            int xPos = x + (World.chunkSizeX * owner.position.x); // local to world cords
-            int zPos = z + (World.chunkSizeZ * owner.position.z); // local to world cords
+            int xPos = x + (World.chunkSizeX * owner.getPosition().x); // local to world cords
+            int zPos = z + (World.chunkSizeZ * owner.getPosition().z); // local to world cords
 
             int lengthX = 0; // set at 0 because if we on first block we shouldnt add.
 
@@ -545,8 +545,8 @@ public class ChunkMesh {
 
         final int BACK_FACE = 8;    // 1000
         if((processedFaces[x][y][z] & BACK_FACE) == 0) {
-            int xPos = x + (World.chunkSizeX * owner.position.x); // local to world cords
-            int zPos = z + (World.chunkSizeZ * owner.position.z); // local to world cords
+            int xPos = x + (World.chunkSizeX * owner.getPosition().x); // local to world cords
+            int zPos = z + (World.chunkSizeZ * owner.getPosition().z); // local to world cords
 
             int lengthX = 0; // set at 0 because if we on first block we shouldnt add.
 
@@ -582,8 +582,8 @@ public class ChunkMesh {
 
         final int RIGHT_FACE = 1;   // 0001
         if((processedFaces[x][y][z] & RIGHT_FACE) == 0) {
-            int xPos = x + (World.chunkSizeX * owner.position.x); // local to world cords
-            int zPos = z + (World.chunkSizeZ * owner.position.z); // local to world cords
+            int xPos = x + (World.chunkSizeX * owner.getPosition().x); // local to world cords
+            int zPos = z + (World.chunkSizeZ * owner.getPosition().z); // local to world cords
 
             int lengthZ = 0; // set at 0 because if we on first block we shouldnt add.
 
@@ -620,8 +620,8 @@ public class ChunkMesh {
 
         final int LEFT_FACE = 2;    // 0010
         if((processedFaces[x][y][z] & LEFT_FACE) == 0) {
-            int xPos = x + (World.chunkSizeX * owner.position.x); // local to world cords
-            int zPos = z + (World.chunkSizeZ * owner.position.z); // local to world cords
+            int xPos = x + (World.chunkSizeX * owner.getPosition().x); // local to world cords
+            int zPos = z + (World.chunkSizeZ * owner.getPosition().z); // local to world cords
 
             int lengthZ = 0; // set at 0 because if we on first block we shouldnt add.
 

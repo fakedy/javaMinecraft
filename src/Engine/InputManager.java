@@ -4,10 +4,10 @@ import org.lwjgl.glfw.*;
 import static org.lwjgl.glfw.GLFW.*;
 public class InputManager {
 
-    private static boolean[] keys = new boolean[GLFW.GLFW_KEY_LAST];
+    private static final boolean[] keys = new boolean[GLFW.GLFW_KEY_LAST];
     private static final boolean[] processedKeys = new boolean[GLFW.GLFW_KEY_LAST];
 
-    private static boolean[] mouseButtons = new boolean[GLFW_MOUSE_BUTTON_LAST];
+    private static final boolean[] mouseButtons = new boolean[GLFW_MOUSE_BUTTON_LAST];
     private static final boolean[] processedMouseButtons = new boolean[GLFW.GLFW_MOUSE_BUTTON_LAST];
 
     private float lastX = 1920 / 2.0f;
@@ -40,7 +40,7 @@ public class InputManager {
 
                 menu = !menu;
 
-                if (menu == true){
+                if (menu){
                     glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                 } else {
                     glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -66,7 +66,7 @@ public class InputManager {
 
         glfwSetCursorPosCallback(windowHandle, (window, xposIn, yposIn) -> {
 
-            if (menu != true) {
+            if (!menu) {
 
                 float xpos = (float) xposIn;
                 float ypos = (float) yposIn;
@@ -84,9 +84,6 @@ public class InputManager {
                 lastY = ypos;
             }
         });
-
-
-
 
     }
 

@@ -4,11 +4,6 @@ public class RenderComponent {
 
 
 
-
-
-
-
-
     public void render(){
 
 

@@ -13,12 +13,11 @@ public class Engine {
     public static void main(String[] args) {
         Engine engine = new Engine();
         engine.start();
-
     }
 
-    double MS_PER_UPDATE = 1000.0 / 165.0;
-    double previous = System.currentTimeMillis();
-    double lag = 0.0;
+    private final double MS_PER_UPDATE = 1000.0 / 165.0;
+    private double previous = System.currentTimeMillis();
+    private double lag = 0.0;
 
     private void start() {
 

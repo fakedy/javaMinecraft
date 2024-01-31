@@ -12,21 +12,10 @@ public class FrameBuffer {
     public int quadVBO;
     public int frameBuffFBO;
 
-    public int rbo;
+
     public int texture;
 
     public int depthTexture;
-
-    float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
-            // positions   // texCoords
-            -1.0f,  1.0f,  0.0f, 1.0f,
-            -1.0f, -1.0f,  0.0f, 0.0f,
-            1.0f, -1.0f,  1.0f, 0.0f,
-
-            -1.0f,  1.0f,  0.0f, 1.0f,
-            1.0f, -1.0f,  1.0f, 0.0f,
-            1.0f,  1.0f,  1.0f, 1.0f
-    };
 
     FrameBuffer(){
 
@@ -34,6 +23,18 @@ public class FrameBuffer {
         quadVBO = glGenBuffers();
         glBindVertexArray(quadVAO);
         glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+        // positions   // texCoords
+        float[] quadVertices = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+                // positions   // texCoords
+                -1.0f, 1.0f, 0.0f, 1.0f,
+                -1.0f, -1.0f, 0.0f, 0.0f,
+                1.0f, -1.0f, 1.0f, 0.0f,
+
+                -1.0f, 1.0f, 0.0f, 1.0f,
+                1.0f, -1.0f, 1.0f, 0.0f,
+                1.0f, 1.0f, 1.0f, 1.0f
+        };
         glBufferData(GL_ARRAY_BUFFER, quadVertices, GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(0);

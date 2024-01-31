@@ -17,7 +17,7 @@ public class Window {
 
 // here we will setup the game window
 
-    public long windowHandle;
+    private final long windowHandle;
     public static int WINDOW_WIDTH = 1920, WINDOW_HEIGHT = 1080    ;
 
     public void run(){
@@ -88,10 +88,6 @@ public class Window {
 
 
         });
-
-
-
-
 
 
 

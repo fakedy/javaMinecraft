@@ -43,7 +43,7 @@ public class Utils {
 
     public static Chunk findChunkByPosition(Vector3i position) {
         for (Chunk chunk : World.chunks) {
-            if (chunk.position.equals(getChunkCoord(new Vector3i(position)))) {
+            if (chunk.getPosition().equals(getChunkCoord(new Vector3i(position)))) {
 
                 return chunk;
             }

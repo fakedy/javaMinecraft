@@ -1,6 +1,5 @@
 package Engine.Renderer;
 
-import java.util.ArrayList;
 
 import static org.lwjgl.opengl.GL46.*;
 

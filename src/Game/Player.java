@@ -5,7 +5,6 @@ import Engine.ECS.GameObject;
 import Engine.InputManager;
 import Engine.Renderer.Renderer;
 import Engine.Time;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 import org.lwjgl.glfw.*;
@@ -15,7 +14,7 @@ public class Player extends GameObject {
 
 
 
-    private double speed = 300.0;
+    private final double speed = 50.0;
     float sens =  0.1f;
 
 

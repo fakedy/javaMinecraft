@@ -1,57 +1,11 @@
 package Engine;
 
 import org.lwjgl.opengl.GL33;
-import Engine.TextureLoader;
 
 import static org.lwjgl.opengl.GL33.*;
 
 public class Skybox {
 
-
-    float[] skyboxVertices = {
-            // positions
-            -1.0f,  1.0f, -1.0f,
-            -1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
-            1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
-
-            -1.0f, -1.0f,  1.0f,
-            -1.0f, -1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f,  1.0f,
-            -1.0f, -1.0f,  1.0f,
-
-            1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
-
-            -1.0f, -1.0f,  1.0f,
-            -1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f, -1.0f,  1.0f,
-            -1.0f, -1.0f,  1.0f,
-
-            -1.0f,  1.0f, -1.0f,
-            1.0f,  1.0f, -1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f, -1.0f,
-
-            -1.0f, -1.0f, -1.0f,
-            -1.0f, -1.0f,  1.0f,
-            1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
-            -1.0f, -1.0f,  1.0f,
-            1.0f, -1.0f,  1.0f
-    };
 
     public int VAO;
 
@@ -76,6 +30,51 @@ public class Skybox {
         glBindVertexArray(VAO);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        // positions
+        float[] skyboxVertices = {
+                // positions
+                -1.0f, 1.0f, -1.0f,
+                -1.0f, -1.0f, -1.0f,
+                1.0f, -1.0f, -1.0f,
+                1.0f, -1.0f, -1.0f,
+                1.0f, 1.0f, -1.0f,
+                -1.0f, 1.0f, -1.0f,
+
+                -1.0f, -1.0f, 1.0f,
+                -1.0f, -1.0f, -1.0f,
+                -1.0f, 1.0f, -1.0f,
+                -1.0f, 1.0f, -1.0f,
+                -1.0f, 1.0f, 1.0f,
+                -1.0f, -1.0f, 1.0f,
+
+                1.0f, -1.0f, -1.0f,
+                1.0f, -1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, -1.0f,
+                1.0f, -1.0f, -1.0f,
+
+                -1.0f, -1.0f, 1.0f,
+                -1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                1.0f, -1.0f, 1.0f,
+                -1.0f, -1.0f, 1.0f,
+
+                -1.0f, 1.0f, -1.0f,
+                1.0f, 1.0f, -1.0f,
+                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                -1.0f, 1.0f, 1.0f,
+                -1.0f, 1.0f, -1.0f,
+
+                -1.0f, -1.0f, -1.0f,
+                -1.0f, -1.0f, 1.0f,
+                1.0f, -1.0f, -1.0f,
+                1.0f, -1.0f, -1.0f,
+                -1.0f, -1.0f, 1.0f,
+                1.0f, -1.0f, 1.0f
+        };
         glBufferData(GL_ARRAY_BUFFER, skyboxVertices, GL_STATIC_DRAW);
 
         // position attribute

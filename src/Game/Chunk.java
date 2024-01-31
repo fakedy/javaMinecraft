@@ -13,7 +13,8 @@ public class Chunk {
 
     Blocks.BlockType[][][] chunkData;
     public ChunkMesh mesh;
-    public Vector3i position;
+
+    private Vector3i position;
 
     public Chunk(Vector3i position) {
 
@@ -29,6 +30,14 @@ public class Chunk {
         mesh = new ChunkMesh(this);
 
         //generateData();
+    }
+
+    public Vector3i getPosition() {
+        return position;
+    }
+
+    public void setPosition(Vector3i position) {
+        this.position = position;
     }
 
 

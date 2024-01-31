@@ -55,8 +55,7 @@ public class World {
     World() {
 
         Renderer.renderObjects = chunks;
-        Skybox sky = new Skybox();
-        Renderer.skybox = sky;
+        Renderer.skybox = new Skybox();
     }
 
 
@@ -118,10 +117,10 @@ public class World {
         iterator = chunks.iterator();
         while(iterator.hasNext()){ // while we have chunks
             Chunk chunk = iterator.next();
-            Vector2i chunkPosition = new Vector2i(chunk.position.x, chunk.position.z);
+            Vector2i chunkPosition = new Vector2i(chunk.getPosition().x, chunk.getPosition().z);
             if(Math.abs(chunkPosition.x - chunkWorld.x) > (worldSizeX/2) || (Math.abs(chunkPosition.y - chunkWorld.z)) > (worldSizeX/2)){ // if we are far away enough from chunk
                 nullNeighboursList.remove(chunk); // removes the chunk from the list of chunks who have null neighbours
-                chunkPosMap.remove(chunk.position);
+                chunkPosMap.remove(chunk.getPosition());
                 vertsCount -= chunk.mesh.transVertsAmount;
                 vertsCount -= chunk.mesh.opaqueVertsAmount;
                 chunk.destroyObject();
@@ -136,7 +135,7 @@ public class World {
 
         for (Chunk chunk : chunkDataQueue){
 
-            Vector3i origin = chunk.position;
+            Vector3i origin = chunk.getPosition();
 
             boolean isNull = false;
 
@@ -182,7 +181,7 @@ public class World {
 
             Chunk chunk = nullNeighboursIterator.next();
 
-            Vector3i origin = chunk.position;
+            Vector3i origin = chunk.getPosition();
 
             boolean isNull = false;
 

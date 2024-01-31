@@ -8,16 +8,9 @@ import Engine.TextureLoader;
 public class Blocks {
 
 
-        static Map<BlockType, Integer> blockTextures = new HashMap<>();
+        static final Map<BlockType, Integer> blockTextures = new HashMap<>();
 
 
-        static {
-
-
-
-            // I dont like this but whatever
-
-        }
 
     public static void initBlocks() {
 
@@ -59,7 +52,7 @@ public class Blocks {
         YELLOW_FLOWER
     }
 
-    static class TextureCoords {
+    private static class TextureCoords {
         public int x;
         public int y;
 
@@ -74,6 +67,7 @@ public class Blocks {
 
 
 
+    // legacy
     public static float[] getTextureCoordsFromAtlas(TextureCoords cords, ChunkMesh.FaceType faceType) {
         float tileWidth = 1.0f / cords.tileAcross; // prob 16
         float startX = cords.x * tileWidth;
@@ -93,6 +87,8 @@ public class Blocks {
                         startX, startY
                 };
             case LEFT:
+            case BOTTOM:
+                // Assuming BOTTOM face orientation is same as TOP
                 // Assuming LEFT needs to be flipped vertically
                 return new float[]{
                         startX, startY,
@@ -121,16 +117,6 @@ public class Blocks {
                         startX, startY,
                         endX, endY,
                         endX, startY
-                };
-            case BOTTOM:
-                // Assuming BOTTOM face orientation is same as TOP
-                return new float[]{
-                        startX, startY,
-                        endX, startY,
-                        endX, endY,
-                        endX, endY,
-                        startX, endY,
-                        startX, startY
                 };
             case RIGHT:
                 // Assuming RIGHT face orientation is same as LEFT
