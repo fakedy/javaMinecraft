@@ -27,11 +27,11 @@ public class World {
     // This is where we will create our world
     // This has become so messy
 
-    public static int chunkSizeX = 16;
-    public static int chunkSizeZ = 16;
+    public static int chunkSizeX = 32;
+    public static int chunkSizeZ = 32;
     static int chunkSizeY = 64;
 
-    static int worldSizeY = 256;
+    static int worldSizeY = 128;
 
     public static int worldSizeX = 32;
     static int worldSizeZ = 32;
@@ -68,7 +68,6 @@ public class World {
         removeChunks();
         spawnChunks();
 
-
         setNeighbours();
         processGeneratedChunks();
         //System.out.println(chunks.size());
@@ -82,19 +81,20 @@ public class World {
         Vector3i chunkWorld = Utils.getChunkCoord(plyPos);
 
 
-        ArrayList<Future<?>> futures = new ArrayList<>();
+        ArrayList<Future<?>> futures = new ArrayList<>(); // list of our threads
         for (int x = 0; x < worldSizeX; x++) {
             for (int z = 0; z < worldSizeZ; z++) {
 
                 Vector3i chunkPosition = new Vector3i((x + chunkWorld.x) - (worldSizeX / 2), 0, (z + chunkWorld.z) - (worldSizeZ / 2));
                 if (!chunkPosMap.containsKey(new Vector3i(chunkPosition.x, 0, chunkPosition.z)) && delay < 0) {
+
                     synchronized (this) {
-                        Future<?> future = executor.submit(() -> {
+                        Future<?> future = executor.submit(() -> {  // creates new thread for each chunk
                             Chunk chunk = new Chunk(chunkPosition);
                             chunkDataQueue.offer(chunk); // Add to queue
                             chunkPosMap.put(chunkPosition, chunk);
                         });
-                        delay = 300;
+                        delay = 50;
                         futures.add(future);
                     }
                 }
@@ -116,11 +116,11 @@ public class World {
         plyPos = new Vector3i((int)Game.player.getPosition().x, (int)Game.player.getPosition().y, (int)Game.player.getPosition().z);
         Vector3i chunkWorld = Utils.getChunkCoord(plyPos);
         iterator = chunks.iterator();
-        while(iterator.hasNext()){
+        while(iterator.hasNext()){ // while we have chunks
             Chunk chunk = iterator.next();
             Vector2i chunkPosition = new Vector2i(chunk.position.x, chunk.position.z);
-            if(Math.abs(chunkPosition.x - chunkWorld.x) > (worldSizeX/2) || (Math.abs(chunkPosition.y - chunkWorld.z)) > (worldSizeX/2)){
-                nullNeighboursList.remove(chunk);
+            if(Math.abs(chunkPosition.x - chunkWorld.x) > (worldSizeX/2) || (Math.abs(chunkPosition.y - chunkWorld.z)) > (worldSizeX/2)){ // if we are far away enough from chunk
+                nullNeighboursList.remove(chunk); // removes the chunk from the list of chunks who have null neighbours
                 chunkPosMap.remove(chunk.position);
                 vertsCount -= chunk.mesh.transVertsAmount;
                 vertsCount -= chunk.mesh.opaqueVertsAmount;

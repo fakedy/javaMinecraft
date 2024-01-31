@@ -49,11 +49,8 @@ public class Terrain {
             for (int y = 0; y < World.chunkSizeY; y++) {
                 for (int z = 0; z < World.chunkSizeZ; z++) {
 
-                    int noiseY = getNoiseY(x + (World.chunkSizeX * chunkPos.x), 0, z + (World.chunkSizeZ * chunkPos.z));
-                    int ridgeNoiseY = getRidgeNoiseY(x + (World.chunkSizeX * chunkPos.x), 0, z + (World.chunkSizeZ * chunkPos.z));
                     int moistNoiseY = getMoistNoiseY(x + (World.chunkSizeX * chunkPos.x),0,z + (World.chunkSizeZ * chunkPos.z));
-                    int noise3D = (int) getNoise3D(x + (World.chunkSizeX * chunkPos.x),y + (World.chunkSizeY * chunkPos.y),z + (World.chunkSizeZ * chunkPos.z)); // no clue why i have to cast this to int
-                    int adjustedY = noiseY + y;
+
 
 
                     switch(getBiome(moistNoiseY)) {
@@ -66,6 +63,11 @@ public class Terrain {
 
 
                         case ROCKLANDS:
+
+                            int noiseY = getNoiseY(x + (World.chunkSizeX * chunkPos.x), 0, z + (World.chunkSizeZ * chunkPos.z));
+                            int ridgeNoiseY = getRidgeNoiseY(x + (World.chunkSizeX * chunkPos.x), 0, z + (World.chunkSizeZ * chunkPos.z));
+                            int noise3D = (int) getNoise3D(x + (World.chunkSizeX * chunkPos.x),y + (World.chunkSizeY * chunkPos.y),z + (World.chunkSizeZ * chunkPos.z)); // no clue why i have to cast this to int
+                            int adjustedY = noiseY + y;
 
                             int noise = ridgeNoiseY + y;
 
@@ -116,12 +118,12 @@ public class Terrain {
     private static void createGrassland(int x, int y, int z, Blocks.BlockType[][][] chunkData, Vector3i chunkPos) {
 
         int noiseY = getNoiseY(x + (World.chunkSizeX * chunkPos.x), 0, z + (World.chunkSizeZ * chunkPos.z));
-        int adjustedIslandY = (noiseY + y/3) + 130;
+        //int adjustedIslandY = (noiseY + y/3) + 130;
         int adjustedY = (noiseY + y);
-        int noise3D = (int) getNoise3D(x + (World.chunkSizeX * chunkPos.x),y + (World.chunkSizeY * chunkPos.y),z + (World.chunkSizeZ * chunkPos.z)); // no clue why i have to cast this to int
+        //int noise3D = (int) getNoise3D(x + (World.chunkSizeX * chunkPos.x),y + (World.chunkSizeY * chunkPos.y),z + (World.chunkSizeZ * chunkPos.z)); // no clue why i have to cast this to int
         int ridgeNoiseY = getRidgeNoiseY(x + (World.chunkSizeX * chunkPos.x), 0, z + (World.chunkSizeZ * chunkPos.z));
-        int adjustedRidgeNoiseY = ridgeNoiseY + y;
-        int adjustedRidgeIslandNoiseY = (-ridgeNoiseY + y/3) + 130;
+        //int adjustedRidgeNoiseY = ridgeNoiseY + y;
+        //int adjustedRidgeIslandNoiseY = (-ridgeNoiseY + y/3) + 130;
 
 
         // Ground
@@ -148,12 +150,15 @@ public class Terrain {
 
 
 
+        /*
         // Island
         if(noise3D < 20){
             chunkData[x][adjustedIslandY][z] = Blocks.BlockType.DIRT;
             if(adjustedIslandY < 150)
                 chunkData[x][adjustedRidgeIslandNoiseY][z] = Blocks.BlockType.STONE;
         }
+
+         */
 
 
 

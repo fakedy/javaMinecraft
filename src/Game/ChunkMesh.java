@@ -521,9 +521,9 @@ public class ChunkMesh {
                 }
 
                 // Shitty hack when at chunk border
-                if(x+xOffset == 16)
+                if(x+xOffset == World.chunkSizeX)
                     break;
-                if(z == 15)
+                if(z == World.chunkSizeX-1)
                     break;
                 if (block == owner.chunkData[x + xOffset][y][z] && (owner.chunkData[x + xOffset][y][z+1] == Blocks.BlockType.AIR || Chunk.isLiquid(owner.chunkData[x + xOffset][y][z+1]))) { // while next block is same type as one before
                     lengthX++;
@@ -593,7 +593,7 @@ public class ChunkMesh {
             for (int zOffset = 1; zOffset < World.chunkSizeZ - x; zOffset++) {
                 if(z == 15)
                     break;
-                if(z + zOffset == 16)
+                if(z + zOffset == World.chunkSizeZ)
                     break;
                 if ((processedFaces[x][y][z + zOffset] & RIGHT_FACE) != 0) {
                     break;
@@ -631,7 +631,7 @@ public class ChunkMesh {
             for (int zOffset = 1; zOffset < World.chunkSizeZ - x; zOffset++) {
                 if(x == 0)
                     break;
-                if(z + zOffset == 16)
+                if(z + zOffset == World.chunkSizeZ)
                     break;
                 if ((processedFaces[x][y][z + zOffset] & LEFT_FACE) != 0) {
                     break;

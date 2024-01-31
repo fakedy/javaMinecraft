@@ -15,7 +15,7 @@ public class Player extends GameObject {
 
 
 
-    private double speed = 65.0;
+    private double speed = 300.0;
     float sens =  0.1f;
 
 

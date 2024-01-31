@@ -188,6 +188,7 @@ public class Renderer {
         float near_plane = 0.1f, far_plane = World.worldSizeX* World.chunkSizeX;
         Matrix4f lightProjection = new Matrix4f().ortho(-World.worldSizeX* World.chunkSizeX, World.worldSizeX* World.chunkSizeX, -World.worldSizeX* World.chunkSizeX, World.worldSizeX* World.chunkSizeX, near_plane, far_plane);
 
+        framebuffer.update();
 
         lightPos = activeCamera.position;
         /*

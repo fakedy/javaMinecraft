@@ -70,8 +70,8 @@ public class FrameBuffer {
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
-         */
 
+         */
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             System.out.println("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -79,5 +79,16 @@ public class FrameBuffer {
 
     }
 
+    void update(){ // to make sure resolution changes are updated
 
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, Window.WINDOW_WIDTH, Window.WINDOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+
+    }
 }
