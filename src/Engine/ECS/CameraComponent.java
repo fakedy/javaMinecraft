@@ -26,7 +26,7 @@ public class CameraComponent {
 
     public void follow() {
 
-        this.position = owner.getPosition();
+        this.position = new Vector3f(0,0,0);
 
         Vector3f tmp = new Vector3f();
         view = new Matrix4f().lookAt(position, position.add(owner.front, tmp), owner.up);

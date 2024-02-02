@@ -27,8 +27,8 @@ public class World {
     // This is where we will create our world
     // This has become so messy
 
-    public static int chunkSizeX = 32;
-    public static int chunkSizeZ = 32;
+    public static int chunkSizeX = 16;
+    public static int chunkSizeZ = 16;
     static int chunkSizeY = 64;
 
     static int worldSizeY = 128;

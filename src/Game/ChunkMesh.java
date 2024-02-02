@@ -40,8 +40,8 @@ public class ChunkMesh {
     }
 
     // Function to combine vertex positions and texture coordinates
-    private Collection<? extends Float> combineVertexData(float[] positions, float[] texCoords) {
-        Float[] combined = new Float[positions.length+texCoords.length];
+    private Collection<? extends Float> combineVertexData(float[] positions, float[] texCoords, byte level) {
+        Float[] combined = new Float[positions.length+texCoords.length+6];
         int index = 0;
         for (int i = 0, j = 0; i < positions.length; i += 6, j += 3) {
             combined[index++] = (positions[i]);     // x
@@ -53,6 +53,7 @@ public class ChunkMesh {
             combined[index++] = (texCoords[j]);     // u
             combined[index++] = (texCoords[j + 1]); // v
             combined[index++] = (texCoords[j + 2]); // i
+            combined[index++] = (float) level; // ao
         }
         return List.of(combined);
     }
@@ -81,15 +82,18 @@ public class ChunkMesh {
             glBufferData(GL_ARRAY_BUFFER, opaqueVertArray, GL_DYNAMIC_DRAW);
 
             // position attribute
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, 9 * Float.BYTES, 0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 10 * Float.BYTES, 0);
             glEnableVertexAttribArray(0);
 
             // normal attribute
-            glVertexAttribPointer(1, 3, GL_FLOAT, false, 9 * Float.BYTES, 3 * Float.BYTES);
+            glVertexAttribPointer(1, 3, GL_FLOAT, false, 10 * Float.BYTES, 3 * Float.BYTES);
             glEnableVertexAttribArray(1);
             // texture attribute
-            glVertexAttribPointer(2, 3, GL_FLOAT, false, 9 * Float.BYTES, 6 * Float.BYTES);
+            glVertexAttribPointer(2, 3, GL_FLOAT, false, 10 * Float.BYTES, 6 * Float.BYTES);
             glEnableVertexAttribArray(2);
+            // AO attribute
+            glVertexAttribPointer(3, 1, GL_FLOAT, false, 10 * Float.BYTES, 9 * Float.BYTES);
+            glEnableVertexAttribArray(3);
         }
 
         if(transVertArray != null) {
@@ -101,15 +105,18 @@ public class ChunkMesh {
             glBufferData(GL_ARRAY_BUFFER, transVertArray, GL_DYNAMIC_DRAW);
 
             // position attribute
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, 9 * Float.BYTES, 0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 10 * Float.BYTES, 0);
             glEnableVertexAttribArray(0);
 
             // normal attribute
-            glVertexAttribPointer(1, 3, GL_FLOAT, false, 9 * Float.BYTES, 3 * Float.BYTES);
+            glVertexAttribPointer(1, 3, GL_FLOAT, false, 10 * Float.BYTES, 3 * Float.BYTES);
             glEnableVertexAttribArray(1);
             // color attribute
-            glVertexAttribPointer(2, 3, GL_FLOAT, false, 9 * Float.BYTES, 6 * Float.BYTES);
+            glVertexAttribPointer(2, 3, GL_FLOAT, false, 10 * Float.BYTES, 6 * Float.BYTES);
             glEnableVertexAttribArray(2);
+            // AO attribute
+            glVertexAttribPointer(3, 1, GL_FLOAT, false, 10 * Float.BYTES, 9 * Float.BYTES);
+            glEnableVertexAttribArray(3);
 
 
             glBindVertexArray(0);
@@ -151,7 +158,7 @@ public class ChunkMesh {
     }
 
 
-    private void generateFace(int x, int y, int z, FaceType faceType, int lengthX, int lengthY, int lengthZ){
+    private void generateFace(int x, int y, int z, FaceType faceType, int lengthX, int lengthY, int lengthZ, byte level){
 
         Blocks.BlockType blockType = owner.chunkData[(x - (World.chunkSizeX * owner.getPosition().x))][y][(z - (World.chunkSizeZ * owner.getPosition().z))];
 
@@ -293,13 +300,13 @@ public class ChunkMesh {
              */
         } else {
             opaqueVertsAmount += 6;
-            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(blockType,faceType, lengthX, lengthY,lengthZ)));
+            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(blockType,faceType, lengthX, lengthY,lengthZ),level));
         }
 
     }
 
 
-    private void generateTopFace(int x, int y, int z, int lengthX, int lengthY, int lengthZ) {
+    private void generateTopFace(int x, int y, int z, int lengthX, int lengthY, int lengthZ, byte level) {
 
         float[] verts;
 
@@ -340,10 +347,10 @@ public class ChunkMesh {
 
         if(Chunk.isLiquid(blockType)){
             transVertsAmount += 6;
-            transVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(blockType,ChunkMesh.FaceType.TOP, lengthX,lengthY,lengthZ)));
+            transVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(blockType,ChunkMesh.FaceType.TOP, lengthX,lengthY,lengthZ), level));
         }  else {
             opaqueVertsAmount += 6;
-            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(blockType,ChunkMesh.FaceType.TOP, lengthX,lengthY,lengthZ)));
+            opaqueVertList.addAll(combineVertexData(verts, Blocks.getTextureCoords(blockType,ChunkMesh.FaceType.TOP, lengthX,lengthY,lengthZ), level));
 
         }
 
@@ -410,6 +417,9 @@ public class ChunkMesh {
                     break;
                 }
             }
+            byte side1 = 0;
+            byte side2 = 0;
+            byte corner = 0;
 
             int lengthZ = World.chunkSizeZ - z; // Initialize to maximum possible length
 
@@ -422,6 +432,12 @@ public class ChunkMesh {
                     if((processedFaces[x + xOffset][y][z + zOffset] & TOP_FACE) != 0){
                         break;
                     }
+                    if(owner.chunkData[x][y+1][z+1] != Blocks.BlockType.AIR)
+                        side1 = 1;
+                    if(x != 15 && owner.chunkData[x+1][y+1][z] != Blocks.BlockType.AIR)
+                        side2 = 1;
+                    if(x != 15 && owner.chunkData[x+1][y+1][z+1] != Blocks.BlockType.AIR)
+                        corner = 1;
                     if (block == owner.chunkData[x + xOffset][y][z + zOffset] && (owner.chunkData[x + xOffset][y + 1][z + zOffset] == Blocks.BlockType.AIR || Chunk.isLiquid(owner.chunkData[x + xOffset][y + 1][z + zOffset]))) {
                         depthZ++;
                     } else {
@@ -435,7 +451,12 @@ public class ChunkMesh {
                 }
             }
 
-            generateTopFace(xPos, y, zPos, lengthX ,0,lengthZ);   // generate face from xPos to xPos + lengthX same with z
+
+
+
+
+
+            generateTopFace(xPos, y, zPos, lengthX ,0,lengthZ, calcAO(side1, side2, corner));   // generate face from xPos to xPos + lengthX same with z
             for(int i = 0; i <= lengthX; i++){
                 for(int j = 0; j <= lengthZ; j++){
                     processedFaces[x + i][y][z+j] |= TOP_FACE;
@@ -495,7 +516,19 @@ public class ChunkMesh {
                 }
             }
 
-            generateFace(xPos, y, zPos, FaceType.BOTTOM,lengthX ,0,lengthZ);   // generate face from xPos to xPos + lengthX same with z
+
+            byte side1 = 0;
+            byte side2 = 0;
+            byte corner = 0;
+
+            if(owner.chunkData[x][y+1][z+1] != Blocks.BlockType.AIR)
+                side1 = 1;
+            if(owner.chunkData[x+1][y+1][z] != Blocks.BlockType.AIR)
+                side2 = 1;
+            if(owner.chunkData[x+1][y+1][z+1] != Blocks.BlockType.AIR)
+                corner = 1;
+
+            generateFace(xPos, y, zPos, FaceType.BOTTOM,lengthX ,0,lengthZ, calcAO(side1, side2, corner));   // generate face from xPos to xPos + lengthX same with z
             for(int i = 0; i <= lengthX; i++){
                 for(int j = 0; j <= lengthZ; j++){
                     processedFaces[x + i][y][z+j] |= BOTTOM_FACE;
@@ -514,24 +547,40 @@ public class ChunkMesh {
             int lengthX = 0; // set at 0 because if we on first block we shouldnt add.
 
             Blocks.BlockType block = owner.chunkData[x][y][z]; // the starting block
+            byte side1 = 0;
+            byte side2 = 0;
+            byte corner = 0;
 
             for (int xOffset = 1; xOffset < World.chunkSizeX - x; xOffset++) {
                 if ((processedFaces[x + xOffset][y][z] & FRONT_FACE) != 0) {
                     break;
                 }
 
+
+
                 // Shitty hack when at chunk border
                 if(x+xOffset == World.chunkSizeX)
                     break;
                 if(z == World.chunkSizeX-1)
                     break;
+
+                if(owner.chunkData[x][y+1][z+1] != Blocks.BlockType.AIR)
+                    side1 = 1;
+                if(owner.chunkData[x+1][y+1][z] != Blocks.BlockType.AIR)
+                    side2 = 1;
+                if(owner.chunkData[x+1][y+1][z+1] != Blocks.BlockType.AIR)
+                    corner = 1;
+
                 if (block == owner.chunkData[x + xOffset][y][z] && (owner.chunkData[x + xOffset][y][z+1] == Blocks.BlockType.AIR || Chunk.isLiquid(owner.chunkData[x + xOffset][y][z+1]))) { // while next block is same type as one before
                     lengthX++;
                 } else {
                     break;
                 }
             }
-            generateFace(xPos, y, zPos, FaceType.FRONT,lengthX ,0,0);   // generate face from xPos to xPos + lengthX same with z
+
+
+
+            generateFace(xPos, y, zPos, FaceType.FRONT,lengthX ,0,0, calcAO(side1, side2, corner));   // generate face from xPos to xPos + lengthX same with z
             for(int i = 0; i <= lengthX; i++){
                 for(int j = 0; j <= 0; j++){
                     processedFaces[x + i][y][z+j] |= FRONT_FACE;
@@ -551,6 +600,9 @@ public class ChunkMesh {
             int lengthX = 0; // set at 0 because if we on first block we shouldnt add.
 
             Blocks.BlockType block = owner.chunkData[x][y][z]; // the starting block
+            byte side1 = 0;
+            byte side2 = 0;
+            byte corner = 0;
 
             for (int xOffset = 1; xOffset < World.chunkSizeX - x; xOffset++) {
                 if ((processedFaces[x + xOffset][y][z] & BACK_FACE) != 0) {
@@ -560,13 +612,25 @@ public class ChunkMesh {
                 // Shitty hack when at chunk border
                 if(z == 0)
                     break;
+
+                if((z != 15) && owner.chunkData[x][y+1][z+1] != Blocks.BlockType.AIR)
+                    side1 = 1;
+                if(x != 15 && owner.chunkData[x+1][y+1][z] != Blocks.BlockType.AIR)
+                    side2 = 1;
+                if((x != 15 && z != 15) && owner.chunkData[x+1][y+1][z+1] != Blocks.BlockType.AIR)
+                    corner = 1;
                 if (block == owner.chunkData[x + xOffset][y][z] && (owner.chunkData[x + xOffset][y][z-1] == Blocks.BlockType.AIR || Chunk.isLiquid(owner.chunkData[x + xOffset][y][z-1]))) { // while next block is same type as one before
                     lengthX++;
                 } else {
                     break;
                 }
             }
-            generateFace(xPos, y, zPos, FaceType.BACK,lengthX ,0,0);   // generate face from xPos to xPos + lengthX same with z
+
+
+
+
+
+            generateFace(xPos, y, zPos, FaceType.BACK,lengthX ,0,0, calcAO(side1, side2, corner));   // generate face from xPos to xPos + lengthX same with z
             for(int i = 0; i <= lengthX; i++){
                 for(int j = 0; j <= 0; j++){
                     processedFaces[x + i][y][z+j] |= BACK_FACE;
@@ -588,7 +652,9 @@ public class ChunkMesh {
             int lengthZ = 0; // set at 0 because if we on first block we shouldnt add.
 
             Blocks.BlockType block = owner.chunkData[x][y][z]; // the starting block
-
+            byte side1 = 0;
+            byte side2 = 0;
+            byte corner = 0;
 
             for (int zOffset = 1; zOffset < World.chunkSizeZ - x; zOffset++) {
                 if(z == 15)
@@ -598,13 +664,23 @@ public class ChunkMesh {
                 if ((processedFaces[x][y][z + zOffset] & RIGHT_FACE) != 0) {
                     break;
                 }
+                if(owner.chunkData[x][y+1][z+1] != Blocks.BlockType.AIR)
+                    side1 = 1;
+                if(owner.chunkData[x+1][y+1][z] != Blocks.BlockType.AIR)
+                    side2 = 1;
+                if(owner.chunkData[x+1][y+1][z+1] != Blocks.BlockType.AIR)
+                    corner = 1;
+
                 if (block == owner.chunkData[x][y][z + zOffset] && (owner.chunkData[x + 1][y][z + zOffset] == Blocks.BlockType.AIR || Chunk.isLiquid(owner.chunkData[x+1][y][z + zOffset]))) { // while next block is same type as one before
                     lengthZ++;
                 } else {
                     break;
                 }
             }
-            generateFace(xPos, y, zPos, FaceType.RIGHT,0 ,0,lengthZ);   // generate face from xPos to xPos + lengthX same with z
+
+
+
+            generateFace(xPos, y, zPos, FaceType.RIGHT,0 ,0,lengthZ, calcAO(side1, side2, corner));   // generate face from xPos to xPos + lengthX same with z
             for(int i = 0; i <= 0; i++){
                 for(int j = 0; j <= lengthZ; j++){
                     processedFaces[x + i][y][z+j] |= RIGHT_FACE;
@@ -626,9 +702,13 @@ public class ChunkMesh {
             int lengthZ = 0; // set at 0 because if we on first block we shouldnt add.
 
             Blocks.BlockType block = owner.chunkData[x][y][z]; // the starting block
+            byte side1 = 0;
+            byte side2 = 0;
+            byte corner = 0;
 
 
             for (int zOffset = 1; zOffset < World.chunkSizeZ - x; zOffset++) {
+                // cases where we should not process
                 if(x == 0)
                     break;
                 if(z + zOffset == World.chunkSizeZ)
@@ -636,13 +716,26 @@ public class ChunkMesh {
                 if ((processedFaces[x][y][z + zOffset] & LEFT_FACE) != 0) {
                     break;
                 }
+                // end of cases
+
+                if(owner.chunkData[x][y+1][z+1] != Blocks.BlockType.AIR)
+                    side1 = 1;
+                if(owner.chunkData[x+1][y+1][z] != Blocks.BlockType.AIR)
+                    side2 = 1;
+                if(owner.chunkData[x+1][y+1][z+1] != Blocks.BlockType.AIR)
+                    corner = 1;
+
                 if (block == owner.chunkData[x][y][z + zOffset] && (owner.chunkData[x - 1][y][z + zOffset] == Blocks.BlockType.AIR || Chunk.isLiquid(owner.chunkData[x-1][y][z + zOffset]))) { // while next block is same type as one before
                     lengthZ++;
                 } else {
                     break;
                 }
             }
-            generateFace(xPos, y, zPos, FaceType.LEFT,0 ,0,lengthZ);   // generate face from xPos to xPos + lengthX same with z
+
+
+
+
+            generateFace(xPos, y, zPos, FaceType.LEFT,0 ,0,lengthZ, calcAO(side1, side2, corner));   // generate face from xPos to xPos + lengthX same with z
             for(int i = 0; i <= 0; i++){
                 for(int j = 0; j <= lengthZ; j++){
                     processedFaces[x + i][y][z+j] |= LEFT_FACE;
@@ -650,5 +743,12 @@ public class ChunkMesh {
             }
         }
 
+    }
+
+    private byte calcAO(byte side1, byte side2, byte corner){
+        if(side1 == 1 && side2 == 1) {
+            return 0;
+        }
+        return (byte) (3 - (side1 + side2 + corner));
     }
 }

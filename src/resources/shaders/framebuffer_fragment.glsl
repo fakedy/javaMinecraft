@@ -18,7 +18,7 @@ float LinearizeDepth(float depth)
     return (2.0 * near * far) / (far + near - z * (far - near));
 }
 
-void main()
+void main() // here you can do funny post processing effects
 {
     float depthR = texture(depthTexture, TexCoords).r;
     float depthLinear = LinearizeDepth(depthR)/far;
